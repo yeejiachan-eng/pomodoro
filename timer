@@ -1,298 +1,319 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Plus, Trash2, CheckCircle, Coffee, Brain, Armchair } from 'lucide-react';
-
-const App = () => {
-  // -------------------------------------------------------------------------
-  // 狀態定義
-  // -------------------------------------------------------------------------
-  const [mode, setMode] = useState('focus'); // focus, shortBreak, longBreak
-  const [timeLeft, setTimeLeft] = useState(25 * 60);
-  const [isActive, setIsActive] = useState(false);
-  const [tasks, setTasks] = useState([]);
-  const [newTaskInput, setNewTaskInput] = useState('');
-  
-  // 用於音效
-  const audioContextRef = useRef(null);
-
-  // -------------------------------------------------------------------------
-  // 設定參數
-  // -------------------------------------------------------------------------
-  const MODES = {
-    focus: {
-      id: 'focus',
-      label: '專注時間',
-      time: 25 * 60,
-      color: 'bg-rose-500',
-      textColor: 'text-rose-500',
-      lightColor: 'bg-rose-100',
-      icon: <Brain size={20} />
-    },
-    shortBreak: {
-      id: 'shortBreak',
-      label: '短暫休息',
-      time: 5 * 60,
-      color: 'bg-teal-500',
-      textColor: 'text-teal-500',
-      lightColor: 'bg-teal-100',
-      icon: <Coffee size={20} />
-    },
-    longBreak: {
-      id: 'longBreak',
-      label: '長休息',
-      time: 15 * 60,
-      color: 'bg-indigo-500',
-      textColor: 'text-indigo-500',
-      lightColor: 'bg-indigo-100',
-      icon: <Armchair size={20} />
-    }
-  };
-
-  // -------------------------------------------------------------------------
-  // 邏輯處理
-  // -------------------------------------------------------------------------
-  
-  // 播放提示音 (使用 Web Audio API，無需外部檔案)
-  const playAlarm = () => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    }
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專注番茄鐘</title>
     
-    const ctx = audioContextRef.current;
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(880, ctx.currentTime); // A5
-    oscillator.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.5); // Drop to A4
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+    <!-- 引入 React 和 ReactDOM (移除 crossorigin 以避免潛在的 CORS 問題) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- 引入 Babel 用於解析 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.5);
-  };
+    <!-- 引入 Lucide React 圖示庫 (鎖定穩定版本 0.263.1 以修復 forwardRef 錯誤) -->
+    <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.min.js"></script>
 
-  // 計時器邏輯
-  useEffect(() => {
-    let interval = null;
-
-    // 更新網頁標題
-    document.title = `${formatTime(timeLeft)} - ${MODES[mode].label}`;
-
-    if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prevTime) => prevTime - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && isActive) {
-      // 時間到
-      setIsActive(false);
-      playAlarm();
-      clearInterval(interval);
-      // 可以選擇自動重置或保持 00:00
-      // setTimeLeft(MODES[mode].time); 
-    } else {
-      clearInterval(interval);
-    }
-
-    return () => clearInterval(interval);
-  }, [isActive, timeLeft, mode]);
-
-  // 切換模式
-  const switchMode = (newMode) => {
-    setMode(newMode);
-    setTimeLeft(MODES[newMode].time);
-    setIsActive(false);
-  };
-
-  // 切換開始/暫停
-  const toggleTimer = () => {
-    setIsActive(!isActive);
-    // 首次點擊時初始化 AudioContext (瀏覽器策略要求)
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    }
-  };
-
-  // 重置
-  const resetTimer = () => {
-    setIsActive(false);
-    setTimeLeft(MODES[mode].time);
-  };
-
-  // 格式化時間 mm:ss
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // 計算進度條百分比
-  const progress = ((MODES[mode].time - timeLeft) / MODES[mode].time) * 100;
-
-  // 任務管理
-  const addTask = (e) => {
-    e.preventDefault();
-    if (!newTaskInput.trim()) return;
-    setTasks([...tasks, { id: Date.now(), text: newTaskInput, completed: false }]);
-    setNewTaskInput('');
-  };
-
-  const toggleTask = (id) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
-  };
-
-  const deleteTask = (id) => {
-    setTasks(tasks.filter(t => t.id !== id));
-  };
-
-  // -------------------------------------------------------------------------
-  // 渲染 UI
-  // -------------------------------------------------------------------------
-  const currentTheme = MODES[mode];
-
-  return (
-    <div className={`min-h-screen transition-colors duration-500 ease-in-out ${currentTheme.color} flex items-center justify-center p-4 font-sans`}>
-      <div className="w-full max-w-md bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300">
-        
-        {/* 頂部導航 (模式切換) */}
-        <div className="flex p-2 bg-gray-100/50 justify-between items-center">
-          {Object.values(MODES).map((m) => (
-            <button
-              key={m.id}
-              onClick={() => switchMode(m.id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 rounded-2xl text-sm font-bold transition-all duration-300 
-                ${mode === m.id ? 'bg-white shadow-sm text-gray-800 scale-100' : 'text-gray-400 hover:text-gray-600 hover:bg-white/50 scale-95'}`}
-            >
-              {m.icon}
-              <span className="hidden sm:inline">{m.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* 主要計時器區域 */}
-        <div className="flex flex-col items-center justify-center py-10 px-6 relative">
-          {/* 進度條背景 (選用，這裡用簡單的圓形或僅文字顯示) */}
-          <div className="relative z-10">
-             <div className={`text-8xl font-black tracking-tighter tabular-nums transition-colors duration-300 ${currentTheme.textColor}`}>
-              {formatTime(timeLeft)}
-            </div>
-            <div className={`text-center mt-2 font-medium text-lg text-gray-400 tracking-widest uppercase`}>
-              {isActive ? '進行中' : '已暫停'}
-            </div>
-          </div>
-          
-          {/* 進度指示條 (底部線條) */}
-          <div className="absolute bottom-0 left-0 h-1 bg-gray-100 w-full">
-            <div 
-              className={`h-full transition-all duration-1000 ease-linear ${currentTheme.color}`} 
-              style={{ width: `${100 - progress}%` }} // 倒數計時，bar 慢慢變短
-            />
-          </div>
-        </div>
-
-        {/* 控制按鈕 */}
-        <div className="flex items-center justify-center gap-6 pb-10">
-           <button 
-            onClick={toggleTimer}
-            className={`h-20 w-20 rounded-full flex items-center justify-center shadow-lg transform active:scale-95 transition-all duration-200 
-              ${isActive ? 'bg-white text-gray-700 ring-2 ring-gray-200' : `${currentTheme.color} text-white hover:brightness-110`}`}
-          >
-            {isActive ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
-          </button>
-
-          <button 
-            onClick={resetTimer}
-            className="h-14 w-14 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 hover:text-gray-700 transition-colors"
-          >
-            <RotateCcw size={24} />
-          </button>
-        </div>
-
-        {/* 任務清單區域 */}
-        <div className="bg-gray-50 flex-1 p-6 border-t border-gray-100">
-          <h3 className="text-gray-500 font-bold mb-4 flex items-center gap-2">
-            <span className={`w-1 h-5 rounded-full ${currentTheme.color}`}></span>
-            待辦事項
-          </h3>
-          
-          {/* 輸入框 */}
-          <form onSubmit={addTask} className="relative mb-4 group">
-            <input
-              type="text"
-              value={newTaskInput}
-              onChange={(e) => setNewTaskInput(e.target.value)}
-              placeholder="新增一個專注任務..."
-              className="w-full bg-white border-none rounded-xl py-4 pl-4 pr-12 shadow-sm text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-opacity-50 transition-all outline-none focus:ring-gray-300"
-              style={{ '--tw-ring-color': currentTheme.color }} 
-            />
-            <button 
-              type="submit"
-              className={`absolute right-2 top-2 p-2 rounded-lg text-white transition-transform duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${currentTheme.color}`}
-              disabled={!newTaskInput.trim()}
-            >
-              <Plus size={20} />
-            </button>
-          </form>
-
-          {/* 列表 */}
-          <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-            {tasks.length === 0 && (
-              <div className="text-center py-4 text-gray-400 text-sm">
-                目前沒有任務，新增一項來開始專注吧！
-              </div>
-            )}
-            
-            {tasks.map((task) => (
-              <div 
-                key={task.id} 
-                className={`group flex items-center justify-between p-3 rounded-xl bg-white border border-gray-100 shadow-sm transition-all duration-200 ${task.completed ? 'opacity-60 bg-gray-50' : 'hover:border-gray-300'}`}
-              >
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <button 
-                    onClick={() => toggleTask(task.id)}
-                    className={`flex-shrink-0 transition-colors duration-200 ${task.completed ? currentTheme.textColor : 'text-gray-300 hover:text-gray-400'}`}
-                  >
-                    <CheckCircle size={22} className={task.completed ? "fill-current" : ""} />
-                  </button>
-                  <span className={`truncate text-gray-700 ${task.completed ? 'line-through text-gray-400' : ''}`}>
-                    {task.text}
-                  </span>
-                </div>
-                
-                <button 
-                  onClick={() => deleteTask(task.id)}
-                  className="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-1"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      
-      {/* 底部版權/說明 (選用) */}
-      <div className="fixed bottom-4 text-white/60 text-xs text-center w-full pointer-events-none">
-        專注・呼吸・放鬆
-      </div>
-
-      <style>{`
+    <style>
         .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
+            width: 4px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
+            background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: rgba(200, 200, 200, 0.5);
-          border-radius: 20px;
+            background-color: rgba(200, 200, 200, 0.5);
+            border-radius: 20px;
         }
-      `}</style>
-    </div>
-  );
-};
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-export default App;
+    <script type="text/babel">
+        // 從全域變數中取得 React Hooks 和 Lucide 圖示
+        const { useState, useEffect, useRef } = React;
+        
+        // 確保 lucideReact 已載入，否則提供錯誤提示
+        const lucideIcons = window.lucideReact || {};
+        const { Play, Pause, RotateCcw, Plus, Trash2, CheckCircle, Coffee, Brain, Armchair } = lucideIcons;
+
+        const App = () => {
+            // -------------------------------------------------------------------------
+            // 狀態定義
+            // -------------------------------------------------------------------------
+            const [mode, setMode] = useState('focus'); // focus, shortBreak, longBreak
+            const [timeLeft, setTimeLeft] = useState(25 * 60);
+            const [isActive, setIsActive] = useState(false);
+            const [tasks, setTasks] = useState([]);
+            const [newTaskInput, setNewTaskInput] = useState('');
+            
+            // 用於音效
+            const audioContextRef = useRef(null);
+
+            // -------------------------------------------------------------------------
+            // 設定參數
+            // -------------------------------------------------------------------------
+            const MODES = {
+                focus: {
+                id: 'focus',
+                label: '專注時間',
+                time: 25 * 60,
+                color: 'bg-rose-500',
+                textColor: 'text-rose-500',
+                lightColor: 'bg-rose-100',
+                icon: Brain ? <Brain size={20} /> : <span>🧠</span>
+                },
+                shortBreak: {
+                id: 'shortBreak',
+                label: '短暫休息',
+                time: 5 * 60,
+                color: 'bg-teal-500',
+                textColor: 'text-teal-500',
+                lightColor: 'bg-teal-100',
+                icon: Coffee ? <Coffee size={20} /> : <span>☕</span>
+                },
+                longBreak: {
+                id: 'longBreak',
+                label: '長休息',
+                time: 15 * 60,
+                color: 'bg-indigo-500',
+                textColor: 'text-indigo-500',
+                lightColor: 'bg-indigo-100',
+                icon: Armchair ? <Armchair size={20} /> : <span>🛋️</span>
+                }
+            };
+
+            // -------------------------------------------------------------------------
+            // 邏輯處理
+            // -------------------------------------------------------------------------
+            
+            // 播放提示音
+            const playAlarm = () => {
+                if (!audioContextRef.current) {
+                audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                const ctx = audioContextRef.current;
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, ctx.currentTime); 
+                oscillator.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.5); 
+                
+                gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+
+                oscillator.start();
+                oscillator.stop(ctx.currentTime + 0.5);
+            };
+
+            // 計時器邏輯
+            useEffect(() => {
+                let interval = null;
+
+                document.title = `${formatTime(timeLeft)} - ${MODES[mode].label}`;
+
+                if (isActive && timeLeft > 0) {
+                interval = setInterval(() => {
+                    setTimeLeft((prevTime) => prevTime - 1);
+                }, 1000);
+                } else if (timeLeft === 0 && isActive) {
+                setIsActive(false);
+                playAlarm();
+                clearInterval(interval);
+                } else {
+                clearInterval(interval);
+                }
+
+                return () => clearInterval(interval);
+            }, [isActive, timeLeft, mode]);
+
+            // 切換模式
+            const switchMode = (newMode) => {
+                setMode(newMode);
+                setTimeLeft(MODES[newMode].time);
+                setIsActive(false);
+            };
+
+            // 切換開始/暫停
+            const toggleTimer = () => {
+                setIsActive(!isActive);
+                if (!audioContextRef.current) {
+                audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            };
+
+            // 重置
+            const resetTimer = () => {
+                setIsActive(false);
+                setTimeLeft(MODES[mode].time);
+            };
+
+            // 格式化時間 mm:ss
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            };
+
+            const progress = ((MODES[mode].time - timeLeft) / MODES[mode].time) * 100;
+
+            // 任務管理
+            const addTask = (e) => {
+                e.preventDefault();
+                if (!newTaskInput.trim()) return;
+                setTasks([...tasks, { id: Date.now(), text: newTaskInput, completed: false }]);
+                setNewTaskInput('');
+            };
+
+            const toggleTask = (id) => {
+                setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+            };
+
+            const deleteTask = (id) => {
+                setTasks(tasks.filter(t => t.id !== id));
+            };
+
+            // -------------------------------------------------------------------------
+            // 渲染 UI
+            // -------------------------------------------------------------------------
+            const currentTheme = MODES[mode];
+
+            return (
+                <div className={`min-h-screen transition-colors duration-500 ease-in-out ${currentTheme.color} flex items-center justify-center p-4 font-sans`}>
+                <div className="w-full max-w-md bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300">
+                    
+                    {/* 頂部導航 */}
+                    <div className="flex p-2 bg-gray-100/50 justify-between items-center">
+                    {Object.values(MODES).map((m) => (
+                        <button
+                        key={m.id}
+                        onClick={() => switchMode(m.id)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 px-2 rounded-2xl text-sm font-bold transition-all duration-300 
+                            ${mode === m.id ? 'bg-white shadow-sm text-gray-800 scale-100' : 'text-gray-400 hover:text-gray-600 hover:bg-white/50 scale-95'}`}
+                        >
+                        {m.icon}
+                        <span className="hidden sm:inline">{m.label}</span>
+                        </button>
+                    ))}
+                    </div>
+
+                    {/* 主要計時器 */}
+                    <div className="flex flex-col items-center justify-center py-10 px-6 relative">
+                    <div className="relative z-10">
+                        <div className={`text-8xl font-black tracking-tighter tabular-nums transition-colors duration-300 ${currentTheme.textColor}`}>
+                        {formatTime(timeLeft)}
+                        </div>
+                        <div className={`text-center mt-2 font-medium text-lg text-gray-400 tracking-widest uppercase`}>
+                        {isActive ? '進行中' : '已暫停'}
+                        </div>
+                    </div>
+                    
+                    <div className="absolute bottom-0 left-0 h-1 bg-gray-100 w-full">
+                        <div 
+                        className={`h-full transition-all duration-1000 ease-linear ${currentTheme.color}`} 
+                        style={{ width: `${100 - progress}%` }}
+                        />
+                    </div>
+                    </div>
+
+                    {/* 按鈕 */}
+                    <div className="flex items-center justify-center gap-6 pb-10">
+                    <button 
+                        onClick={toggleTimer}
+                        className={`h-20 w-20 rounded-full flex items-center justify-center shadow-lg transform active:scale-95 transition-all duration-200 
+                        ${isActive ? 'bg-white text-gray-700 ring-2 ring-gray-200' : `${currentTheme.color} text-white hover:brightness-110`}`}
+                    >
+                        {isActive ? (Pause ? <Pause size={32} fill="currentColor" /> : "||") : (Play ? <Play size={32} fill="currentColor" className="ml-1" /> : "▶")}
+                    </button>
+
+                    <button 
+                        onClick={resetTimer}
+                        className="h-14 w-14 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 hover:text-gray-700 transition-colors"
+                    >
+                        {RotateCcw ? <RotateCcw size={24} /> : "R"}
+                    </button>
+                    </div>
+
+                    {/* 任務 */}
+                    <div className="bg-gray-50 flex-1 p-6 border-t border-gray-100">
+                    <h3 className="text-gray-500 font-bold mb-4 flex items-center gap-2">
+                        <span className={`w-1 h-5 rounded-full ${currentTheme.color}`}></span>
+                        待辦事項
+                    </h3>
+                    
+                    <form onSubmit={addTask} className="relative mb-4 group">
+                        <input
+                        type="text"
+                        value={newTaskInput}
+                        onChange={(e) => setNewTaskInput(e.target.value)}
+                        placeholder="新增一個專注任務..."
+                        className="w-full bg-white border-none rounded-xl py-4 pl-4 pr-12 shadow-sm text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-opacity-50 transition-all outline-none focus:ring-gray-300"
+                        style={{ '--tw-ring-color': currentTheme.color }} 
+                        />
+                        <button 
+                        type="submit"
+                        className={`absolute right-2 top-2 p-2 rounded-lg text-white transition-transform duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${currentTheme.color}`}
+                        disabled={!newTaskInput.trim()}
+                        >
+                        {Plus ? <Plus size={20} /> : "+"}
+                        </button>
+                    </form>
+
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                        {tasks.length === 0 && (
+                        <div className="text-center py-4 text-gray-400 text-sm">
+                            目前沒有任務，新增一項來開始專注吧！
+                        </div>
+                        )}
+                        
+                        {tasks.map((task) => (
+                        <div 
+                            key={task.id} 
+                            className={`group flex items-center justify-between p-3 rounded-xl bg-white border border-gray-100 shadow-sm transition-all duration-200 ${task.completed ? 'opacity-60 bg-gray-50' : 'hover:border-gray-300'}`}
+                        >
+                            <div className="flex items-center gap-3 overflow-hidden">
+                            <button 
+                                onClick={() => toggleTask(task.id)}
+                                className={`flex-shrink-0 transition-colors duration-200 ${task.completed ? currentTheme.textColor : 'text-gray-300 hover:text-gray-400'}`}
+                            >
+                                {CheckCircle ? <CheckCircle size={22} className={task.completed ? "fill-current" : ""} /> : (task.completed ? "☑" : "☐")}
+                            </button>
+                            <span className={`truncate text-gray-700 ${task.completed ? 'line-through text-gray-400' : ''}`}>
+                                {task.text}
+                            </span>
+                            </div>
+                            
+                            <button 
+                            onClick={() => deleteTask(task.id)}
+                            className="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-1"
+                            >
+                            {Trash2 ? <Trash2 size={18} /> : "x"}
+                            </button>
+                        </div>
+                        ))}
+                    </div>
+                    </div>
+                </div>
+                
+                <div className="fixed bottom-4 text-white/60 text-xs text-center w-full pointer-events-none">
+                    專注・呼吸・放鬆
+                </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
