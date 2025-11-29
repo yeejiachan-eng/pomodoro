@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>LifeRPG - Final v6.7 (Fixed)</title>
+    <title>LifeRPG - Final v6.8 (Clean UI)</title>
     
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -496,6 +496,15 @@
                     showNotification("已重置為預設值", "info"); 
                     setShowSettings(false); 
                 } 
+            };
+
+            const handleHardReset = () => {
+                if (window.confirm("【⚠️ 危險操作】\n這將清除「所有」存檔與紀錄，包括等級和金錢，並回到初始狀態。\n\n確定要完全重置嗎？")) {
+                    if (window.confirm("再次確認：真的要全部清除嗎？")) {
+                        localStorage.clear();
+                        window.location.reload();
+                    }
+                }
             };
             
             const handleDeleteTask = (id) => { setTasks(tasks.filter(t => t.id !== id)); showNotification("已刪除", "error"); };
@@ -1143,8 +1152,7 @@
             return (
                 <div className="w-full min-h-full flex flex-col text-sm">
                     {notification && <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />}
-                    <button onClick={() => {if(confirm("【緊急救援】\n確定要強制清除所有資料重置嗎？\n這將解決畫面卡死的問題，但會遺失進度。")){localStorage.clear();location.reload();}}} className="fixed bottom-1 left-1 opacity-20 hover:opacity-100 text-[10px] bg-red-500 text-white p-1 rounded z-[9999]">SOS</button>
-
+                    
                     <div className="sticky top-0 z-30 w-full pt-safe px-3 pb-2 shrink-0" style={{background: '#2d3748'}}>
                         <div className="ro-window p-3 space-y-2 max-w-lg mx-auto">
                             <div className="flex items-center justify-between bg-slate-700/50 rounded p-1.5 border border-slate-600 mb-1">
@@ -1249,6 +1257,12 @@
                                 <label className="ro-btn-base px-3 py-2 rounded text-sm font-bold flex items-center justify-center gap-2 bg-gray-100 text-gray-800 border-gray-300 cursor-pointer hover:bg-gray-200"><Upload size={14}/> 讀取存檔<input type="file" className="hidden" onChange={handleImportData}/></label>
                             </div>
                             <Button onClick={handleManualReset} variant="secondary" className="w-full"><RefreshCw size={14}/> 重置每日任務</Button>
+                            
+                            {/* Danger Zone */}
+                            <div className="pt-4 border-t border-slate-300 mt-2">
+                                <h4 className="text-xs font-bold text-red-600 mb-2 uppercase tracking-wider">Danger Zone</h4>
+                                <Button onClick={handleHardReset} variant="danger" className="w-full justify-start"><AlertTriangle size={14}/> 強制清除所有資料 (Hard Reset)</Button>
+                            </div>
                          </div>
                     </Modal>
                     <Modal isOpen={showCalendar} onClose={() => setShowCalendar(false)} title="Calendar">
