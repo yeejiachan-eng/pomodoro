@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>LifeRPG - v6.0 (Main Quest System)</title>
+    <title>LifeRPG - v6.1 (Main Quest + Fixes)</title>
     
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -13,42 +13,57 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=VT323&display=swap" rel="stylesheet">
 
     <style>
-        /* --- Styles --- */
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; background-color: #2d3748; background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 20px 20px; font-family: 'Noto Sans TC', sans-serif; color: #1a202c; -webkit-tap-highlight-color: transparent; overflow: hidden; width: 100%; height: 100%; position: fixed; }
         #root { width: 100%; height: 100%; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; max-width: 100vw; }
         .font-pixel { font-family: 'VT323', monospace; }
         input, select, textarea { font-size: 16px !important; background-color: #f7fafc; border: 1px solid #cbd5e0; color: #2d3748; border-radius: 4px; }
         input:focus, select:focus { outline: 2px solid #63b3ed; border-color: #63b3ed; }
-        
         .ro-window { background: linear-gradient(to bottom, #f0f4f8, #e2e8f0); border: 1px solid #a0aec0; border-radius: 6px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8); position: relative; width: 100%; max-width: 100%; }
         .ro-title-bar { background: linear-gradient(to bottom, #bfdcf5, #8db2e3); border-bottom: 1px solid #7a9bc9; color: #1a365d; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); border-radius: 5px 5px 0 0; padding: 4px 8px; font-weight: bold; font-size: 0.9rem; }
         .ro-bar-container { background: #2d3748; border-radius: 9999px; padding: 2px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); border: 1px solid #4a5568; }
         .ro-bar-fill { background: linear-gradient(to bottom, #8ec5fc 0%, #4a90e2 50%, #2b6cb0 51%, #2c5282 100%); border-radius: 9999px; position: relative; overflow: hidden; }
         .ro-bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(to bottom, rgba(255,255,255,0.6), rgba(255,255,255,0.1)); border-radius: 9999px 9999px 0 0; }
-
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         .pt-safe { padding-top: max(1rem, env(safe-area-inset-top)); }
         .ro-btn-base { border: 1px solid transparent; box-shadow: 0 1px 2px rgba(0,0,0,0.2); transition: all 0.1s; }
         .ro-btn-base:active { transform: translateY(1px); box-shadow: none; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-        
         @keyframes job-change-shine { 0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(255, 215, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); } }
         .animate-job-change { animation: job-change-shine 1.5s infinite; }
-        
         .calendar-day { text-align: center; padding: 6px 0; font-size: 0.8rem; border-radius: 4px; }
         .calendar-day.today { border: 2px solid #63b3ed; font-weight: bold; }
         .calendar-day.selected { background-color: #3182ce; color: white; }
         .calendar-day.has-data { position: relative; }
         .calendar-day.has-data::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background-color: #48bb78; }
+        
+        /* Emergency Button */
+        #emergency-reset {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            z-index: 99999;
+            background: #e53e3e;
+            color: white;
+            border: 2px solid white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 10px;
+            font-weight: bold;
+            opacity: 0.5;
+            cursor: pointer;
+        }
+        #emergency-reset:hover { opacity: 1; }
     </style>
 </head>
 <body>
+    <button id="emergency-reset" onclick="if(confirm('【緊急救援】\n這將清除所有資料並重置頁面。\n\n如果畫面全黑或卡住，請按確定。')){localStorage.clear();window.location.reload();}">RESET DATA (SOS)</button>
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
         import * as LucideReact from "https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0";
-        const { Trophy, Zap, CheckCircle2, Plus, Trash2, Dumbbell, BookOpen, Home, TrendingUp, Lock, Unlock, Star, RefreshCw, X, Briefcase, Heart, Calendar, Clock, Repeat, Download, Filter, HardHat, Info, Settings, Upload, Save, Sword, User, Crown, Sparkles, Gift, Coins, ShoppingBag, Battery, ChevronLeft, ChevronRight, RotateCcw, Volume2, VolumeX, ArrowRight, Star: StarIcon, Coffee, ShoppingCart, Moon, Sun, Edit3, CheckSquare, AlertTriangle, Scroll } = LucideReact;
+        // Safe import destructuring - removed Scroll to avoid potential undefined issues
+        const { Trophy, Zap, CheckCircle2, Plus, Trash2, Dumbbell, BookOpen, Home, TrendingUp, Lock, Unlock, Star, RefreshCw, X, Briefcase, Heart, Calendar, Clock, Repeat, Download, Filter, HardHat, Info, Settings, Upload, Save, Sword, User, Crown, Sparkles, Gift, Coins, ShoppingBag, Battery, ChevronLeft, ChevronRight, RotateCcw, Volume2, VolumeX, ArrowRight, Star: StarIcon, Coffee, ShoppingCart, Moon, Sun, Edit3, CheckSquare, AlertTriangle, FileText } = LucideReact;
 
         // --- Audio ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -81,15 +96,14 @@
             }
         };
 
-        // --- Defaults ---
+        // --- Data Definitions ---
         const MAIN_QUEST_PE = {
             id: 9001,
             title: "考取環工技師執照 (PE)",
             category: "knowledge",
-            repeat: "project", // New type for Quest
+            repeat: "project",
             chainIndex: 0,
             completed: false,
-            // Phase Structure
             phases: [
                 { label: "1. 研究報考資格", type: "linear", xp: 50, money: 100 },
                 { label: "2. 報名補修學分課程", type: "linear", xp: 50, money: 200 },
@@ -113,16 +127,16 @@
                     label: "8. 放榜時刻", 
                     type: "decision", 
                     options: [
-                        { label: "😭 沒通過 (重置報名)", action: "retry", targetIndex: 3 }, // Index 3 = Step 4
+                        { label: "😭 沒通過 (重置報名)", action: "retry", targetIndex: 3 }, 
                         { label: "🎉 恭喜達成 (完成)", action: "complete" }
                     ]
                 }
             ],
-            subProgress: [] // To track parallel items IDs
+            subProgress: []
         };
 
         const DEFAULT_TASKS = [
-            MAIN_QUEST_PE, // Add Main Quest by default
+            MAIN_QUEST_PE, 
             { id: 1001, title: "遛狗", category: "fitness", xp: 30, money: 50, repeat: 'daily' }, 
             { id: 1002, title: "健身/運動", category: "fitness", xp: 50, money: 100, stamina: 34, repeat: 'daily' }, 
             { id: 3014, title: "丟垃圾", category: "chores", xp: 10, money: 20, repeat: 'daily' },
@@ -256,14 +270,12 @@
             const handleProjectAction = (task, actionType, payload) => {
                 const phaseIdx = task.chainIndex || 0;
                 const phase = task.phases[phaseIdx];
-                
+                if (!phase) return;
+
                 if (actionType === 'advance_linear') {
-                    // Update user
                     updateUserStatus(phase.xp, task.category, phase.money, 0);
                     sfx.step();
                     setHistory(prev => [{ logId: Date.now(), title: `${task.title}: ${phase.label}`, category: task.category, xp: phase.xp, money: phase.money, completedAt: new Date().toISOString() }, ...prev]);
-                    
-                    // Update task phase
                     const nextIdx = phaseIdx + 1;
                     const isDone = nextIdx >= task.phases.length;
                     setTasks(prev => prev.map(t => t.id === task.id ? { ...t, chainIndex: nextIdx, completed: isDone } : t));
@@ -271,15 +283,12 @@
                 else if (actionType === 'toggle_parallel') {
                     const itemId = payload;
                     const currentSub = task.subProgress || [];
-                    
                     if (currentSub.includes(itemId)) {
-                        // Undo item
                         const item = phase.items.find(i => i.id === itemId);
                         updateUserStatus(-item.xp, task.category, -item.money, 0);
                         setTasks(prev => prev.map(t => t.id === task.id ? { ...t, subProgress: t.subProgress.filter(id => id !== itemId) } : t));
                         sfx.cancel();
                     } else {
-                        // Complete item
                         const item = phase.items.find(i => i.id === itemId);
                         updateUserStatus(item.xp, task.category, item.money, 0);
                         sfx.step();
@@ -304,7 +313,7 @@
                         showNotification(`🎉 恭喜！主線任務【${task.title}】達成！`, "gold");
                         setHistory(prev => [{ logId: Date.now(), title: `主線完成: ${task.title}`, category: 'knowledge', xp: 2000, money: 5000, isReward: true, completedAt: new Date().toISOString() }, ...prev]);
                         updateUserStatus(2000, task.category, 5000, 0);
-                        setTimeout(() => { setNewJobTitle(""); setJobChangeData(task.title); }, 1000); // Trigger Job Change
+                        setTimeout(() => { setNewJobTitle(""); setJobChangeData(task.title); }, 1000); 
                     }
                 }
             };
@@ -312,9 +321,8 @@
             // Task Actions
             const handleToggleTask = (taskId) => {
                 const task = tasks.find(t => t.id === taskId);
-                if (task.repeat === 'project') return; // Handled by buttons
+                if (task.repeat === 'project') return; 
                 
-                // Regular Logic
                 const isCompleted = (dailyCompletions[viewDateStr] || []).includes(task.id);
                 if (task.chain) {
                      const idx = Math.min(task.chainIndex||0, task.chain.length-1);
@@ -356,6 +364,7 @@
                 if (task.repeat === 'project' && task.phases) {
                     const idx = task.chainIndex || 0;
                     const phase = task.phases[Math.min(idx, task.phases.length-1)];
+                    if (!phase) return null; // Safe guard
                     const isDone = task.completed;
                     
                     return (
@@ -372,15 +381,13 @@
                                         {phase.label}
                                     </div>
                                     
-                                    {/* Linear Type */}
                                     {phase.type === 'linear' && (
                                         <div className="flex justify-end">
                                             <Button onClick={() => handleProjectAction(task, 'advance_linear')} variant="purple" className="text-xs shadow-md">完成此階段 (+{phase.xp} XP)</Button>
                                         </div>
                                     )}
                                     
-                                    {/* Parallel Type */}
-                                    {phase.type === 'parallel' && (
+                                    {phase.type === 'parallel' && phase.items && (
                                         <div className="space-y-1 bg-white/50 p-3 rounded border border-purple-200">
                                             <div className="text-xs text-slate-500 mb-2 font-bold">請點擊勾選已完成項目：</div>
                                             <div className="grid grid-cols-1 gap-1.5">
@@ -409,8 +416,7 @@
                                         </div>
                                     )}
                                     
-                                    {/* Decision Type */}
-                                    {phase.type === 'decision' && (
+                                    {phase.type === 'decision' && phase.options && (
                                         <div className="flex gap-2 mt-2">
                                             {phase.options.map((opt, i) => (
                                                 <Button key={i} onClick={() => handleProjectAction(task, 'decision', opt)} variant={opt.action==='complete'?"gold":"danger"} className="flex-1 text-xs justify-center py-3 shadow-md">
@@ -423,8 +429,6 @@
                             )}
                             
                             {isDone && <div className="text-center py-4 text-yellow-600 font-bold flex flex-col items-center gap-2"><Trophy size={32}/> <span>傳說達成！</span></div>}
-                            
-                            {/* Quest Progress Bar */}
                             <div className="mt-1 h-2 w-full bg-slate-300 rounded-full overflow-hidden border border-slate-400">
                                 <div className="h-full bg-gradient-to-r from-purple-400 to-purple-600 transition-all duration-500" style={{width: `${(idx / task.phases.length) * 100}%`}}></div>
                             </div>
@@ -522,7 +526,7 @@
                         {activeTab === 'tasks' && (
                             <div className="space-y-6 pb-12 animate-slide-in">
                                 
-                                {/* MAIN QUEST SECTION (NEW) */}
+                                {/* MAIN QUEST SECTION */}
                                 {mainQuests.length > 0 && (
                                     <div className="mb-6">
                                         <h3 className="text-[12px] font-bold text-purple-600 uppercase tracking-widest mb-2 border-b border-purple-200 pb-1 flex items-center gap-1"><Sword size={12}/> 主線任務 (Main Quest)</h3>
@@ -567,7 +571,7 @@
                     {/* Settings */}
                     <Modal isOpen={showSettings} onClose={() => setShowSettings(false)} title="System">
                         <div className="space-y-4">
-                            <Button onClick={handleImportEngineerPack} variant="purple" className="w-full justify-start"><Scroll size={14}/> 匯入主線任務包 (環工PE)</Button>
+                            <Button onClick={handleImportEngineerPack} variant="purple" className="w-full justify-start"><FileText size={14}/> 匯入主線任務包 (環工PE)</Button>
                             <Button onClick={handleReset} variant="secondary" className="w-full"><RefreshCw size={14}/> 重置每日任務</Button>
                             <div className="pt-4 border-t border-slate-300 mt-2"><h4 className="text-xs font-bold text-red-600 mb-2 uppercase tracking-wider">Danger Zone</h4><Button onClick={handleHardReset} variant="danger" className="w-full justify-start"><AlertTriangle size={14}/> 強制清除所有資料</Button></div>
                         </div>
