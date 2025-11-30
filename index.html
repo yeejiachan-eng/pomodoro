@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>LifeRPG - v6.1 (Main Quest + Fixes)</title>
+    <title>LifeRPG - v6.2 (Safe Mode)</title>
     
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -13,24 +13,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=VT323&display=swap" rel="stylesheet">
 
     <style>
+        /* --- Styles --- */
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; background-color: #2d3748; background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 20px 20px; font-family: 'Noto Sans TC', sans-serif; color: #1a202c; -webkit-tap-highlight-color: transparent; overflow: hidden; width: 100%; height: 100%; position: fixed; }
         #root { width: 100%; height: 100%; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; max-width: 100vw; }
         .font-pixel { font-family: 'VT323', monospace; }
         input, select, textarea { font-size: 16px !important; background-color: #f7fafc; border: 1px solid #cbd5e0; color: #2d3748; border-radius: 4px; }
         input:focus, select:focus { outline: 2px solid #63b3ed; border-color: #63b3ed; }
+        
         .ro-window { background: linear-gradient(to bottom, #f0f4f8, #e2e8f0); border: 1px solid #a0aec0; border-radius: 6px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8); position: relative; width: 100%; max-width: 100%; }
         .ro-title-bar { background: linear-gradient(to bottom, #bfdcf5, #8db2e3); border-bottom: 1px solid #7a9bc9; color: #1a365d; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); border-radius: 5px 5px 0 0; padding: 4px 8px; font-weight: bold; font-size: 0.9rem; }
         .ro-bar-container { background: #2d3748; border-radius: 9999px; padding: 2px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); border: 1px solid #4a5568; }
         .ro-bar-fill { background: linear-gradient(to bottom, #8ec5fc 0%, #4a90e2 50%, #2b6cb0 51%, #2c5282 100%); border-radius: 9999px; position: relative; overflow: hidden; }
         .ro-bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(to bottom, rgba(255,255,255,0.6), rgba(255,255,255,0.1)); border-radius: 9999px 9999px 0 0; }
+
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         .pt-safe { padding-top: max(1rem, env(safe-area-inset-top)); }
         .ro-btn-base { border: 1px solid transparent; box-shadow: 0 1px 2px rgba(0,0,0,0.2); transition: all 0.1s; }
         .ro-btn-base:active { transform: translateY(1px); box-shadow: none; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
+        
         @keyframes job-change-shine { 0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(255, 215, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); } }
         .animate-job-change { animation: job-change-shine 1.5s infinite; }
+        
         .calendar-day { text-align: center; padding: 6px 0; font-size: 0.8rem; border-radius: 4px; }
         .calendar-day.today { border: 2px solid #63b3ed; font-weight: bold; }
         .calendar-day.selected { background-color: #3182ce; color: white; }
@@ -39,19 +44,10 @@
         
         /* Emergency Button */
         #emergency-reset {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            z-index: 99999;
-            background: #e53e3e;
-            color: white;
-            border: 2px solid white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 10px;
-            font-weight: bold;
-            opacity: 0.5;
-            cursor: pointer;
+            position: fixed; bottom: 10px; left: 10px; z-index: 99999;
+            background: #e53e3e; color: white; border: 2px solid white;
+            padding: 5px 10px; border-radius: 5px; font-size: 10px; font-weight: bold;
+            opacity: 0.5; cursor: pointer;
         }
         #emergency-reset:hover { opacity: 1; }
     </style>
@@ -61,25 +57,30 @@
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        import * as LucideReact from "https://esm.sh/lucide-react@0.263.1?deps=react@18.2.0";
-        // Safe import destructuring - removed Scroll to avoid potential undefined issues
-        const { Trophy, Zap, CheckCircle2, Plus, Trash2, Dumbbell, BookOpen, Home, TrendingUp, Lock, Unlock, Star, RefreshCw, X, Briefcase, Heart, Calendar, Clock, Repeat, Download, Filter, HardHat, Info, Settings, Upload, Save, Sword, User, Crown, Sparkles, Gift, Coins, ShoppingBag, Battery, ChevronLeft, ChevronRight, RotateCcw, Volume2, VolumeX, ArrowRight, Star: StarIcon, Coffee, ShoppingCart, Moon, Sun, Edit3, CheckSquare, AlertTriangle, FileText } = LucideReact;
+        // ⚠️ REMOVED EXTERNAL ICON LIBRARY TO PREVENT CRASHES ⚠️
+        // Using Emojis instead for 100% stability.
 
-        // --- Audio ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // --- Audio Safety Wrapper ---
+        let audioCtx;
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) { console.warn("Audio Context not supported"); }
+
         const playTone = (freq, type, duration, delay = 0, vol = 0.1) => {
-            if (!window.soundEnabled) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime + delay);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(audioCtx.currentTime + delay);
-            osc.stop(audioCtx.currentTime + delay + duration);
+            if (!window.soundEnabled || !audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime + delay);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + delay);
+                osc.stop(audioCtx.currentTime + delay + duration);
+            } catch(e) {}
         };
         const sfx = {
             click: () => playTone(800, 'triangle', 0.05, 0, 0.05),
@@ -89,6 +90,7 @@
             success: () => { playTone(1200, 'sine', 0.1, 0, 0.1); playTone(2400, 'sine', 0.4, 0.05, 0.1); },
             levelup: () => { const now = 0; playTone(523.25, 'square', 0.2, now, 0.1); playTone(659.25, 'square', 0.2, now + 0.1, 0.1); playTone(783.99, 'square', 0.2, now + 0.2, 0.1); playTone(1046.50, 'square', 0.6, now + 0.3, 0.1); },
             questComplete: () => { 
+                if(!audioCtx) return;
                 const now = audioCtx.currentTime;
                 [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50].forEach((freq, i) => {
                     playTone(freq, 'square', 0.15, i * 0.15, 0.1);
@@ -153,12 +155,12 @@
         ];
 
         const categories = {
-            fitness: { type: 'base', bg: "bg-red-100 text-red-800", icon: <Dumbbell size={14} />, label: "健康" },
-            grooming: { type: 'base', bg: "bg-pink-100 text-pink-800", icon: <Sparkles size={14} />, label: "儀容" },
-            chores: { type: 'base', bg: "bg-blue-100 text-blue-800", icon: <Home size={14} />, label: "雜務" },
-            knowledge: { type: 'job', bg: "bg-purple-100 text-purple-800", icon: <BookOpen size={14} />, label: "知識" },
-            finance: { type: 'job', bg: "bg-emerald-100 text-emerald-800", icon: <TrendingUp size={14} />, label: "理財" },
-            general: { type: 'base', bg: "bg-gray-100 text-gray-800", icon: <Star size={14} />, label: "一般" },
+            fitness: { type: 'base', bg: "bg-red-100 text-red-800", icon: "💪", label: "健康" },
+            grooming: { type: 'base', bg: "bg-pink-100 text-pink-800", icon: "✨", label: "儀容" },
+            chores: { type: 'base', bg: "bg-blue-100 text-blue-800", icon: "🧹", label: "雜務" },
+            knowledge: { type: 'job', bg: "bg-purple-100 text-purple-800", icon: "📚", label: "知識" },
+            finance: { type: 'job', bg: "bg-emerald-100 text-emerald-800", icon: "📈", label: "理財" },
+            general: { type: 'base', bg: "bg-gray-100 text-gray-800", icon: "⭐", label: "一般" },
         };
         const rewardCategories = {
             food: { label: "🍔 飲食享受", color: "text-orange-600 border-orange-200 bg-orange-50" },
@@ -194,26 +196,28 @@
 
         const Modal = ({ isOpen, onClose, title, children }) => {
             if (!isOpen) return null;
-            return <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm px-4"><div className="ro-window w-full max-w-sm flex flex-col max-h-[85vh] shadow-2xl animate-slide-up"><div className="ro-title-bar flex justify-between items-center shrink-0"><h3 className="flex items-center gap-2 text-sm"><Info size={14}/> {title}</h3><button onClick={() => { sfx.cancel(); onClose(); }} className="text-slate-600 hover:text-red-600 hover:bg-white/50 rounded p-0.5"><X size={18} /></button></div><div className="p-4 overflow-y-auto bg-[#f7fafc]">{children}</div></div></div>;
+            return <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm px-4"><div className="ro-window w-full max-w-sm flex flex-col max-h-[85vh] shadow-2xl animate-slide-up"><div className="ro-title-bar flex justify-between items-center shrink-0"><h3 className="flex items-center gap-2 text-sm">ℹ️ {title}</h3><button onClick={() => { sfx.cancel(); onClose(); }} className="text-slate-600 hover:text-red-600 hover:bg-white/50 rounded p-0.5">✖</button></div><div className="p-4 overflow-y-auto bg-[#f7fafc]">{children}</div></div></div>;
         };
 
         const Notification = ({ message, type, onClose }) => {
             if (!message) return null;
             const styles = { success: "bg-emerald-100 text-emerald-800 border-emerald-300", error: "bg-red-100 text-red-800 border-red-300", info: "bg-blue-100 text-blue-800 border-blue-300", gold: "bg-yellow-100 text-yellow-800 border-yellow-300 shadow-[0_0_10px_rgba(250,204,21,0.5)]" };
-            return <div className={`fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[70] flex items-center justify-between gap-3 px-4 py-2 rounded-lg border shadow-lg w-[90%] max-w-sm ${styles[type] || styles.info}`}><span className="truncate text-sm font-bold">{message}</span><button onClick={onClose} className="opacity-60 hover:opacity-100"><X size={16} /></button></div>;
+            return <div className={`fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[70] flex items-center justify-between gap-3 px-4 py-2 rounded-lg border shadow-lg w-[90%] max-w-sm ${styles[type] || styles.info}`}><span className="truncate text-sm font-bold">{message}</span><button onClick={onClose} className="opacity-60 hover:opacity-100">✖</button></div>;
         };
 
         // --- App Logic ---
         function LifeRPG() {
             const [user, setUser] = React.useState(() => {
-                const saved = localStorage.getItem('liferpg-user-v2');
-                return saved ? JSON.parse(saved) : { name: "Player", jobTitle: "工程師", zeny: 0, base: { level: 1, xp: 0, maxXp: 100 }, job: { level: 1, xp: 0, maxXp: 100 }, stamina: { current: 100, max: 100 }, sound: true };
+                try {
+                    const saved = localStorage.getItem('liferpg-user-v2');
+                    return saved ? JSON.parse(saved) : { name: "Player", jobTitle: "工程師", zeny: 0, base: { level: 1, xp: 0, maxXp: 100 }, job: { level: 1, xp: 0, maxXp: 100 }, stamina: { current: 100, max: 100 }, sound: true };
+                } catch(e) { return { name: "Player", jobTitle: "工程師", zeny: 0, base: { level: 1, xp: 0, maxXp: 100 }, job: { level: 1, xp: 0, maxXp: 100 }, stamina: { current: 100, max: 100 }, sound: true }; }
             });
-            const [tasks, setTasks] = React.useState(() => { const saved = localStorage.getItem('liferpg-tasks'); return saved ? JSON.parse(saved) : DEFAULT_TASKS; });
-            const [dailyCompletions, setDailyCompletions] = React.useState(() => { const saved = localStorage.getItem('liferpg-daily-completions'); return saved ? JSON.parse(saved) : {}; });
-            const [rewards, setRewards] = React.useState(() => { const saved = localStorage.getItem('liferpg-rewards-v2'); return saved ? JSON.parse(saved) : DEFAULT_REWARDS; });
-            const [history, setHistory] = React.useState(() => { const saved = localStorage.getItem('liferpg-history'); return saved ? JSON.parse(saved) : []; });
-            const [appState, setAppState] = React.useState(() => { const saved = localStorage.getItem('liferpg-app-state'); return saved ? JSON.parse(saved) : { lastVisitDate: new Date().toDateString() }; });
+            const [tasks, setTasks] = React.useState(() => { try { const saved = localStorage.getItem('liferpg-tasks'); return saved ? JSON.parse(saved) : DEFAULT_TASKS; } catch(e){ return DEFAULT_TASKS; }});
+            const [dailyCompletions, setDailyCompletions] = React.useState(() => { try { const saved = localStorage.getItem('liferpg-daily-completions'); return saved ? JSON.parse(saved) : {}; } catch(e){ return {}; }});
+            const [rewards, setRewards] = React.useState(() => { try { const saved = localStorage.getItem('liferpg-rewards-v2'); return saved ? JSON.parse(saved) : DEFAULT_REWARDS; } catch(e){ return DEFAULT_REWARDS; }});
+            const [history, setHistory] = React.useState(() => { try { const saved = localStorage.getItem('liferpg-history'); return saved ? JSON.parse(saved) : []; } catch(e){ return []; }});
+            const [appState, setAppState] = React.useState(() => { try { const saved = localStorage.getItem('liferpg-app-state'); return saved ? JSON.parse(saved) : { lastVisitDate: new Date().toDateString() }; } catch(e){ return { lastVisitDate: new Date().toDateString() }; }});
 
             const [activeTab, setActiveTab] = React.useState('tasks');
             const [questFilter, setQuestFilter] = React.useState('all'); 
@@ -364,13 +368,13 @@
                 if (task.repeat === 'project' && task.phases) {
                     const idx = task.chainIndex || 0;
                     const phase = task.phases[Math.min(idx, task.phases.length-1)];
-                    if (!phase) return null; // Safe guard
+                    if (!phase) return null; 
                     const isDone = task.completed;
                     
                     return (
                          <div key={task.id} className={`relative p-4 ro-window mb-4 border-2 shadow-lg ${isDone ? 'border-yellow-500 bg-yellow-50' : 'border-purple-500 bg-purple-50'}`}>
                             <div className="flex items-center justify-between mb-2 border-b border-purple-200 pb-2">
-                                <h3 className="font-bold text-purple-900 flex items-center gap-2 text-base"><Sword size={18} className="text-purple-600"/> {task.title}</h3>
+                                <h3 className="font-bold text-purple-900 flex items-center gap-2 text-base">⚔️ {task.title}</h3>
                                 <span className="text-xs font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full border">{isDone ? "LEGEND" : `Phase ${idx + 1}/${task.phases.length}`}</span>
                             </div>
                             
@@ -396,7 +400,7 @@
                                                 return (
                                                     <div key={item.id} className={`flex items-center gap-3 cursor-pointer p-2 rounded transition-all border ${isChecked ? 'bg-purple-100 border-purple-300' : 'bg-white hover:bg-slate-100 border-slate-200'}`} onClick={() => handleProjectAction(task, 'toggle_parallel', item.id)}>
                                                         <div className={`w-5 h-5 border rounded flex items-center justify-center transition-colors ${isChecked ? 'bg-purple-500 border-purple-600' : 'bg-white border-slate-300'}`}>
-                                                            {isChecked && <CheckSquare size={14} className="text-white" />}
+                                                            {isChecked && <span className="text-white text-xs">✓</span>}
                                                         </div>
                                                         <span className={`text-sm ${isChecked ? 'text-purple-800 font-bold' : 'text-slate-700'}`}>{item.label} <span className="text-[10px] text-slate-400 ml-1">+{item.xp}XP</span></span>
                                                     </div>
@@ -428,7 +432,7 @@
                                 </div>
                             )}
                             
-                            {isDone && <div className="text-center py-4 text-yellow-600 font-bold flex flex-col items-center gap-2"><Trophy size={32}/> <span>傳說達成！</span></div>}
+                            {isDone && <div className="text-center py-4 text-yellow-600 font-bold flex flex-col items-center gap-2">🏆 <span>傳說達成！</span></div>}
                             <div className="mt-1 h-2 w-full bg-slate-300 rounded-full overflow-hidden border border-slate-400">
                                 <div className="h-full bg-gradient-to-r from-purple-400 to-purple-600 transition-all duration-500" style={{width: `${(idx / task.phases.length) * 100}%`}}></div>
                             </div>
@@ -436,7 +440,6 @@
                     );
                 }
 
-                // REGULAR RENDERER
                 let displayTitle = task.title;
                 let stepInfo = "";
                 if (task.chain) {
@@ -448,14 +451,14 @@
                 return (
                     <div key={task.id} className={`relative flex items-center justify-between p-3 ro-window ${isCompleted ? 'opacity-50 bg-gray-300 border-gray-400' : 'bg-white'}`}>
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                             <button onClick={() => { sfx.click(); setTasks(prev => prev.map(t => t.id === task.id ? { ...t, isFavorite: !t.isFavorite } : t)); }} className={`shrink-0 ${task.isFavorite ? 'text-yellow-400' : 'text-slate-300 hover:text-yellow-200'}`}><StarIcon size={16} fill={task.isFavorite ? "currentColor" : "none"} /></button>
-                             <button onClick={() => handleToggleTask(task.id)} className={`shrink-0 h-6 w-6 rounded shadow-sm flex items-center justify-center border transition-all active:scale-95 ${isCompleted ? 'bg-green-100 border-green-300 text-green-600' : 'bg-white border-slate-300 text-slate-300 hover:border-blue-400'}`}>{isCompleted && <CheckCircle2 size={14} />}</button>
+                             <button onClick={() => { sfx.click(); setTasks(prev => prev.map(t => t.id === task.id ? { ...t, isFavorite: !t.isFavorite } : t)); }} className={`shrink-0 ${task.isFavorite ? 'text-yellow-400' : 'text-slate-300 hover:text-yellow-200'}`}>★</button>
+                             <button onClick={() => handleToggleTask(task.id)} className={`shrink-0 h-6 w-6 rounded shadow-sm flex items-center justify-center border transition-all active:scale-95 ${isCompleted ? 'bg-green-100 border-green-300 text-green-600' : 'bg-white border-slate-300 text-slate-300 hover:border-blue-400'}`}>{isCompleted && "✓"}</button>
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 mb-0.5"><span className={`text-[9px] px-1 rounded border ${cat.bg} flex items-center gap-1`}>{cat.icon} {cat.label}</span><span className="text-[10px] font-pixel text-slate-500">+{task.xp} {cat.type==='base'?'Base':'Job'}</span><span className="text-[10px] font-pixel text-yellow-600 bg-yellow-50 px-1 rounded border border-yellow-200">+${task.money||task.xp*2} Z</span></div>
                                 <div className="flex items-center gap-2"><h3 className={`font-bold text-sm truncate ${isCompleted ? 'line-through text-slate-500' : 'text-slate-800'}`}>{displayTitle} <span className="text-[10px] text-slate-500 font-normal">{stepInfo}</span></h3></div>
                             </div>
                         </div>
-                        <button onClick={() => { setTasks(tasks.filter(t => t.id !== task.id)); showNotification("已刪除", "error"); }} className="ml-2 text-slate-400 hover:text-red-500"><Trash2 size={14} /></button>
+                        <button onClick={() => { setTasks(tasks.filter(t => t.id !== task.id)); showNotification("已刪除", "error"); }} className="ml-2 text-slate-400 hover:text-red-500">🗑️</button>
                     </div>
                 );
             };
@@ -477,10 +480,8 @@
                 ); 
             };
 
-            // Section Sorting Logic
             const mainQuests = tasks.filter(t => t.repeat === 'project');
             const normalTasks = tasks.filter(t => t.repeat !== 'project');
-            // Re-use logic for normal tasks
             const getFilteredTaskLists = () => { 
                 let baseList = normalTasks.filter(task => { 
                     const cat = categories[task.category] || categories.general; 
@@ -506,11 +507,11 @@
                     <div className="sticky top-0 z-30 w-full pt-safe px-3 pb-2 shrink-0" style={{background: '#2d3748'}}>
                         <div className="ro-window p-3 space-y-2 max-w-lg mx-auto">
                             <div className="flex items-center justify-between bg-slate-700/50 rounded p-1.5 border border-slate-600 mb-1">
-                                <div className="flex items-center gap-2"><Clock size={14} className="text-blue-300" /><span className="font-pixel text-lg text-white tracking-widest">{timeString}</span></div>
-                                <div className="flex items-center gap-3"><button onClick={toggleWorkMode} className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors border ${clockStats.isWorkingDay ? 'bg-blue-900/80 text-blue-200 border-blue-700' : 'bg-green-900/80 text-green-200 border-green-700'}`}>{clockStats.isWorkingDay ? <Briefcase size={10} /> : <Coffee size={10} />} {clockStats.isWorkingDay ? "上班日" : "休假日"}</button><div className="flex items-center gap-1 text-xs font-bold text-slate-300"><Moon size={12} className={clockStats.status === 'sleep' ? 'text-slate-500' : 'text-yellow-200'} />{clockStats.status === 'sleep' ? <span className="text-slate-500">休息中</span> : <span className={clockStats.hours < 2 ? 'text-red-400' : 'text-white'}>{clockStats.hours}h {clockStats.mins}m <span className="text-[9px] text-slate-400 ml-1 font-normal">自由</span></span>}</div></div>
+                                <div className="flex items-center gap-2"><span className="text-lg">🕒</span><span className="font-pixel text-lg text-white tracking-widest">{timeString}</span></div>
+                                <div className="flex items-center gap-3"><button onClick={toggleWorkMode} className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors border ${clockStats.isWorkingDay ? 'bg-blue-900/80 text-blue-200 border-blue-700' : 'bg-green-900/80 text-green-200 border-green-700'}`}>{clockStats.isWorkingDay ? "💼" : "☕"} {clockStats.isWorkingDay ? "上班日" : "休假日"}</button><div className="flex items-center gap-1 text-xs font-bold text-slate-300"><span className={clockStats.status === 'sleep' ? 'text-slate-500' : 'text-yellow-200'}>🌙</span>{clockStats.status === 'sleep' ? <span className="text-slate-500">休息中</span> : <span className={clockStats.hours < 2 ? 'text-red-400' : 'text-white'}>{clockStats.hours}h {clockStats.mins}m <span className="text-[9px] text-slate-400 ml-1 font-normal">自由</span></span>}</div></div>
                             </div>
-                            <div className="flex items-start justify-between border-b border-slate-300 pb-1 mb-1"><h1 className="text-base font-bold text-blue-900 flex items-center gap-2">Player Status</h1><div className="flex items-center gap-2"><div className="bg-white/80 border border-slate-400 rounded px-2 py-0.5 text-xs font-pixel flex items-center gap-1"><span className="text-yellow-600 font-bold">Z</span><span>{user.zeny}</span></div><button onClick={() => setShowSettings(true)} className="text-slate-500"><Settings size={16} /></button></div></div>
-                            <div className="flex justify-between items-end px-1"><div>{isEditingName ? (<input autoFocus className="text-sm font-bold text-slate-800 w-32 px-1 py-0.5" value={tempName} onChange={e => setTempName(e.target.value)} onBlur={() => {setIsEditingName(false); setUser({...user, name: tempName}); sfx.confirm();}} />) : (<div className="text-sm font-bold text-slate-800 flex items-center gap-2 cursor-pointer hover:bg-slate-200 rounded px-1 transition-colors" onClick={() => setIsEditingName(true)}>{user.name} <Edit3 size={12} className="text-slate-400"/></div>)}<div className="text-xs font-bold text-blue-700 flex items-center gap-1"><Crown size={12} className="text-yellow-500" /> {user.jobTitle}</div></div></div>
+                            <div className="flex items-start justify-between border-b border-slate-300 pb-1 mb-1"><h1 className="text-base font-bold text-blue-900 flex items-center gap-2">Player Status</h1><div className="flex items-center gap-2"><div className="bg-white/80 border border-slate-400 rounded px-2 py-0.5 text-xs font-pixel flex items-center gap-1"><span className="text-yellow-600 font-bold">Z</span><span>{user.zeny}</span></div><button onClick={() => setShowSettings(true)} className="text-slate-500">⚙️</button></div></div>
+                            <div className="flex justify-between items-end px-1"><div>{isEditingName ? (<input autoFocus className="text-sm font-bold text-slate-800 w-32 px-1 py-0.5" value={tempName} onChange={e => setTempName(e.target.value)} onBlur={() => {setIsEditingName(false); setUser({...user, name: tempName}); sfx.confirm();}} />) : (<div className="text-sm font-bold text-slate-800 flex items-center gap-2 cursor-pointer hover:bg-slate-200 rounded px-1 transition-colors" onClick={() => setIsEditingName(true)}>{user.name} ✏️</div>)}<div className="text-xs font-bold text-blue-700 flex items-center gap-1">👑 {user.jobTitle}</div></div></div>
                             <div className="flex items-center gap-2"><span className="text-xs font-bold text-slate-700 w-14 shrink-0">Base Lv.</span><ProgressBar current={user.base.xp} max={user.base.maxXp} height="h-3" /><span className="text-xs font-bold w-8 text-right font-pixel">{user.base.level}</span></div>
                             <div className="flex items-center gap-2"><span className="text-xs font-bold text-slate-700 w-14 shrink-0">Job Lv.</span><ProgressBar current={user.job.xp} max={user.job.maxXp} height="h-3" /><span className="text-xs font-bold w-8 text-right font-pixel">{user.job.level}</span></div>
                             <div className="flex items-center gap-2"><span className="text-xs font-bold text-emerald-700 w-14 shrink-0">STA</span><ProgressBar current={user.stamina?.current || 0} max={user.stamina?.max || 100} height="h-3" type="stamina" /><span className="text-xs font-bold w-8 text-right font-pixel">{Math.floor(user.stamina?.current || 0)}</span></div>
@@ -519,29 +520,23 @@
 
                     <main className="flex-1 w-full max-w-lg mx-auto p-3 pb-32 overflow-x-hidden">
                         <div className="grid grid-cols-2 gap-2 mb-4 w-full">
-                            <button onClick={() => {sfx.click(); setActiveTab('tasks')}} className={`ro-btn-base py-2 rounded text-xs font-bold flex items-center justify-center gap-1 ${activeTab === 'tasks' ? 'bg-blue-200 text-blue-900 border-blue-400' : 'bg-white text-slate-600 border-slate-300'}`}><CheckCircle2 size={14} /> 任務</button>
-                            <button onClick={() => {sfx.click(); setActiveTab('rewards')}} className={`ro-btn-base py-2 rounded text-xs font-bold flex items-center justify-center gap-1 ${activeTab === 'rewards' ? 'bg-amber-200 text-amber-900 border-amber-400' : 'bg-white text-slate-600 border-slate-300'}`}><ShoppingBag size={14} /> 商店</button>
+                            <button onClick={() => {sfx.click(); setActiveTab('tasks')}} className={`ro-btn-base py-2 rounded text-xs font-bold flex items-center justify-center gap-1 ${activeTab === 'tasks' ? 'bg-blue-200 text-blue-900 border-blue-400' : 'bg-white text-slate-600 border-slate-300'}`}>✅ 任務</button>
+                            <button onClick={() => {sfx.click(); setActiveTab('rewards')}} className={`ro-btn-base py-2 rounded text-xs font-bold flex items-center justify-center gap-1 ${activeTab === 'rewards' ? 'bg-amber-200 text-amber-900 border-amber-400' : 'bg-white text-slate-600 border-slate-300'}`}>🛍️ 商店</button>
                         </div>
 
                         {activeTab === 'tasks' && (
                             <div className="space-y-6 pb-12 animate-slide-in">
-                                
-                                {/* MAIN QUEST SECTION */}
                                 {mainQuests.length > 0 && (
                                     <div className="mb-6">
-                                        <h3 className="text-[12px] font-bold text-purple-600 uppercase tracking-widest mb-2 border-b border-purple-200 pb-1 flex items-center gap-1"><Sword size={12}/> 主線任務 (Main Quest)</h3>
+                                        <h3 className="text-[12px] font-bold text-purple-600 uppercase tracking-widest mb-2 border-b border-purple-200 pb-1 flex items-center gap-1">📜 主線任務 (Main Quest)</h3>
                                         <div className="space-y-4">{mainQuests.map(t => renderTaskItem(t))}</div>
                                     </div>
                                 )}
-
-                                {/* FILTER & NAV */}
                                 <div className="grid grid-cols-3 gap-2 mb-2 w-full">
                                     <button onClick={() => {sfx.click(); setQuestFilter('all');}} className={`py-1.5 rounded-full text-[10px] font-bold border text-center w-full ${questFilter === 'all' ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-slate-500 border-slate-300'}`}>全部</button>
                                     <button onClick={() => {sfx.click(); setQuestFilter('base');}} className={`py-1.5 rounded-full text-[10px] font-bold border text-center w-full ${questFilter === 'base' ? 'bg-red-500 text-white border-red-600' : 'bg-white text-slate-500 border-slate-300'}`}>生活</button>
                                     <button onClick={() => {sfx.click(); setQuestFilter('job');}} className={`py-1.5 rounded-full text-[10px] font-bold border text-center w-full ${questFilter === 'job' ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-300'}`}>職涯</button>
                                 </div>
-
-                                {/* TASK LISTS */}
                                 {favorites.length === 0 && others.length === 0 && mainQuests.length === 0 && completedList.length === 0 && <div className="text-center py-8 text-slate-400 text-xs">無任務</div>}
                                 {renderTaskSection(favorites, "🌟 關注任務", "text-yellow-500 border-yellow-700")}
                                 {Object.entries(categories).map(([key, cat]) => {
@@ -560,7 +555,7 @@
                                      return (
                                         <div key={reward.id} className={`p-3 ro-window flex items-center justify-between ${isUnlocked ? 'bg-white' : 'bg-gray-200 opacity-80'}`}>
                                             <div><h3 className="font-bold text-sm text-slate-700">{reward.title}</h3><div className="text-[10px] text-slate-500">{reward.currency==='zeny'?'$'+reward.cost+' Z':reward.cost+' STA'}</div></div>
-                                            {isUnlocked ? <Button onClick={() => { if(canAfford){ sfx.confirm(); updateUserStatus(0,'general',reward.currency==='zeny'?-reward.cost:0,reward.currency!=='zeny'?-reward.cost:0); showNotification("已兌換","gold"); setHistory(prev=>[{logId:Date.now(),title:`兌換: ${reward.title}`,category:'general',xp:0,money:0,isReward:true,completedAt:new Date().toISOString()},...prev]); } else { sfx.cancel(); showNotification("餘額不足","error"); } }} variant={canAfford?"green":"outline"}>購買</Button> : <Lock size={16} className="text-slate-400"/>}
+                                            {isUnlocked ? <Button onClick={() => { if(canAfford){ sfx.confirm(); updateUserStatus(0,'general',reward.currency==='zeny'?-reward.cost:0,reward.currency!=='zeny'?-reward.cost:0); showNotification("已兌換","gold"); setHistory(prev=>[{logId:Date.now(),title:`兌換: ${reward.title}`,category:'general',xp:0,money:0,isReward:true,completedAt:new Date().toISOString()},...prev]); } else { sfx.cancel(); showNotification("餘額不足","error"); } }} variant={canAfford?"green":"outline"}>購買</Button> : <span className="text-slate-400">🔒</span>}
                                         </div>
                                      );
                                 })}
@@ -568,18 +563,16 @@
                         )}
                     </main>
 
-                    {/* Settings */}
                     <Modal isOpen={showSettings} onClose={() => setShowSettings(false)} title="System">
                         <div className="space-y-4">
-                            <Button onClick={handleImportEngineerPack} variant="purple" className="w-full justify-start"><FileText size={14}/> 匯入主線任務包 (環工PE)</Button>
-                            <Button onClick={handleReset} variant="secondary" className="w-full"><RefreshCw size={14}/> 重置每日任務</Button>
-                            <div className="pt-4 border-t border-slate-300 mt-2"><h4 className="text-xs font-bold text-red-600 mb-2 uppercase tracking-wider">Danger Zone</h4><Button onClick={handleHardReset} variant="danger" className="w-full justify-start"><AlertTriangle size={14}/> 強制清除所有資料</Button></div>
+                            <Button onClick={handleImportEngineerPack} variant="purple" className="w-full justify-start">📜 匯入主線任務包 (環工PE)</Button>
+                            <Button onClick={handleReset} variant="secondary" className="w-full">🔄 重置每日任務</Button>
+                            <div className="pt-4 border-t border-slate-300 mt-2"><h4 className="text-xs font-bold text-red-600 mb-2 uppercase tracking-wider">Danger Zone</h4><Button onClick={handleHardReset} variant="danger" className="w-full justify-start">⚠️ 強制清除所有資料</Button></div>
                         </div>
                     </Modal>
 
-                    {/* Level Up & Job Change Modals */}
-                    <Modal isOpen={!!levelUpData} onClose={() => setLevelUpData(null)} title="LEVEL UP!"><div className="text-center space-y-4 py-4"><div className="mx-auto h-20 w-20 rounded-full bg-yellow-100 flex items-center justify-center animate-bounce text-yellow-600 border-4 border-yellow-200"><img src="https://api.iconify.design/mdi:wings.svg?color=goldenrod" className="w-12 h-12" alt="wings" /></div><div><h2 className="text-3xl font-pixel text-blue-800">LV {levelUpData?.level}</h2><p className="text-sm text-slate-600 mt-1">Congratulations!</p></div><Button onClick={() => setLevelUpData(null)} variant="primary" className="w-full mt-2">Confirm</Button></div></Modal>
-                    <Modal isOpen={!!jobChangeData} onClose={() => setJobChangeData(null)} title="JOB CHANGE!"><div className="text-center space-y-4 py-4"><div className="mx-auto h-24 w-24 rounded-full bg-gradient-to-b from-yellow-300 to-yellow-500 flex items-center justify-center animate-job-change border-4 border-white shadow-lg"><Crown size={48} className="text-white drop-shadow-md" /></div><div><h2 className="text-xl font-bold text-blue-900">完成: {jobChangeData}</h2><p className="text-sm text-slate-600 mt-2">請輸入新職業：</p><input type="text" placeholder="例如: 環工技師" className="w-full mt-3 px-3 py-2 text-center font-bold text-lg border-2 border-yellow-400 focus:border-yellow-600 rounded" value={newJobTitle} onChange={(e) => setNewJobTitle(e.target.value)} /></div><Button onClick={() => { if(newJobTitle.trim()) { sfx.levelup(); setUser(prev => ({ ...prev, jobTitle: newJobTitle })); setJobChangeData(null); showNotification(`轉職成功！${newJobTitle}`, "gold"); }}} variant="gold" className="w-full mt-2 py-3 text-base">確認轉職</Button></div></Modal>
+                    <Modal isOpen={!!levelUpData} onClose={() => setLevelUpData(null)} title="LEVEL UP!"><div className="text-center space-y-4 py-4"><div className="mx-auto h-20 w-20 rounded-full bg-yellow-100 flex items-center justify-center animate-bounce text-yellow-600 border-4 border-yellow-200"><span className="text-4xl">🦋</span></div><div><h2 className="text-3xl font-pixel text-blue-800">LV {levelUpData?.level}</h2><p className="text-sm text-slate-600 mt-1">Congratulations!</p></div><Button onClick={() => setLevelUpData(null)} variant="primary" className="w-full mt-2">Confirm</Button></div></Modal>
+                    <Modal isOpen={!!jobChangeData} onClose={() => setJobChangeData(null)} title="JOB CHANGE!"><div className="text-center space-y-4 py-4"><div className="mx-auto h-24 w-24 rounded-full bg-gradient-to-b from-yellow-300 to-yellow-500 flex items-center justify-center animate-job-change border-4 border-white shadow-lg"><span className="text-6xl">👑</span></div><div><h2 className="text-xl font-bold text-blue-900">完成: {jobChangeData}</h2><p className="text-sm text-slate-600 mt-2">請輸入新職業：</p><input type="text" placeholder="例如: 環工技師" className="w-full mt-3 px-3 py-2 text-center font-bold text-lg border-2 border-yellow-400 focus:border-yellow-600 rounded" value={newJobTitle} onChange={(e) => setNewJobTitle(e.target.value)} /></div><Button onClick={() => { if(newJobTitle.trim()) { sfx.levelup(); setUser(prev => ({ ...prev, jobTitle: newJobTitle })); setJobChangeData(null); showNotification(`轉職成功！${newJobTitle}`, "gold"); }}} variant="gold" className="w-full mt-2 py-3 text-base">確認轉職</Button></div></Modal>
                 </div>
             );
         }
