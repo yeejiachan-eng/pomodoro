@@ -3,52 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>LifeRPG - v6.2 (Safe Mode)</title>
+    <title>LifeRPG - v6.3 (Ultra Safe Mode)</title>
     
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("⚠️ 發生錯誤：\n" + message + "\n行數：" + lineno);
+        };
+    </script>
+
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=VT323&display=swap" rel="stylesheet">
 
     <style>
-        /* --- Styles --- */
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; background-color: #2d3748; background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 20px 20px; font-family: 'Noto Sans TC', sans-serif; color: #1a202c; -webkit-tap-highlight-color: transparent; overflow: hidden; width: 100%; height: 100%; position: fixed; }
         #root { width: 100%; height: 100%; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; max-width: 100vw; }
         .font-pixel { font-family: 'VT323', monospace; }
         input, select, textarea { font-size: 16px !important; background-color: #f7fafc; border: 1px solid #cbd5e0; color: #2d3748; border-radius: 4px; }
         input:focus, select:focus { outline: 2px solid #63b3ed; border-color: #63b3ed; }
-        
         .ro-window { background: linear-gradient(to bottom, #f0f4f8, #e2e8f0); border: 1px solid #a0aec0; border-radius: 6px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8); position: relative; width: 100%; max-width: 100%; }
         .ro-title-bar { background: linear-gradient(to bottom, #bfdcf5, #8db2e3); border-bottom: 1px solid #7a9bc9; color: #1a365d; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); border-radius: 5px 5px 0 0; padding: 4px 8px; font-weight: bold; font-size: 0.9rem; }
         .ro-bar-container { background: #2d3748; border-radius: 9999px; padding: 2px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); border: 1px solid #4a5568; }
         .ro-bar-fill { background: linear-gradient(to bottom, #8ec5fc 0%, #4a90e2 50%, #2b6cb0 51%, #2c5282 100%); border-radius: 9999px; position: relative; overflow: hidden; }
         .ro-bar-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(to bottom, rgba(255,255,255,0.6), rgba(255,255,255,0.1)); border-radius: 9999px 9999px 0 0; }
-
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
         .pt-safe { padding-top: max(1rem, env(safe-area-inset-top)); }
         .ro-btn-base { border: 1px solid transparent; box-shadow: 0 1px 2px rgba(0,0,0,0.2); transition: all 0.1s; }
         .ro-btn-base:active { transform: translateY(1px); box-shadow: none; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-        
         @keyframes job-change-shine { 0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(255, 215, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); } }
         .animate-job-change { animation: job-change-shine 1.5s infinite; }
-        
         .calendar-day { text-align: center; padding: 6px 0; font-size: 0.8rem; border-radius: 4px; }
         .calendar-day.today { border: 2px solid #63b3ed; font-weight: bold; }
         .calendar-day.selected { background-color: #3182ce; color: white; }
         .calendar-day.has-data { position: relative; }
         .calendar-day.has-data::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background-color: #48bb78; }
         
-        /* Emergency Button */
-        #emergency-reset {
-            position: fixed; bottom: 10px; left: 10px; z-index: 99999;
-            background: #e53e3e; color: white; border: 2px solid white;
-            padding: 5px 10px; border-radius: 5px; font-size: 10px; font-weight: bold;
-            opacity: 0.5; cursor: pointer;
-        }
+        #emergency-reset { position: fixed; bottom: 10px; left: 10px; z-index: 99999; background: #e53e3e; color: white; border: 2px solid white; padding: 5px 10px; border-radius: 5px; font-size: 10px; font-weight: bold; opacity: 0.5; cursor: pointer; }
         #emergency-reset:hover { opacity: 1; }
     </style>
 </head>
@@ -56,15 +51,10 @@
     <button id="emergency-reset" onclick="if(confirm('【緊急救援】\n這將清除所有資料並重置頁面。\n\n如果畫面全黑或卡住，請按確定。')){localStorage.clear();window.location.reload();}">RESET DATA (SOS)</button>
     <div id="root"></div>
 
-    <script type="text/babel" data-type="module">
-        // ⚠️ REMOVED EXTERNAL ICON LIBRARY TO PREVENT CRASHES ⚠️
-        // Using Emojis instead for 100% stability.
-
-        // --- Audio Safety Wrapper ---
+    <script type="text/babel">
+        // --- 1. Audio System (Safe) ---
         let audioCtx;
-        try {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        } catch (e) { console.warn("Audio Context not supported"); }
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
 
         const playTone = (freq, type, duration, delay = 0, vol = 0.1) => {
             if (!window.soundEnabled || !audioCtx) return;
@@ -91,14 +81,20 @@
             levelup: () => { const now = 0; playTone(523.25, 'square', 0.2, now, 0.1); playTone(659.25, 'square', 0.2, now + 0.1, 0.1); playTone(783.99, 'square', 0.2, now + 0.2, 0.1); playTone(1046.50, 'square', 0.6, now + 0.3, 0.1); },
             questComplete: () => { 
                 if(!audioCtx) return;
-                const now = audioCtx.currentTime;
-                [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50].forEach((freq, i) => {
-                    playTone(freq, 'square', 0.15, i * 0.15, 0.1);
-                });
+                [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50].forEach((freq, i) => { playTone(freq, 'square', 0.15, i * 0.15, 0.1); });
             }
         };
 
-        // --- Data Definitions ---
+        // --- 2. Data & Categories (Icons replaced with Emojis) ---
+        const categories = {
+            fitness: { type: 'base', bg: "bg-red-100 text-red-800", icon: "💪", label: "健康" },
+            grooming: { type: 'base', bg: "bg-pink-100 text-pink-800", icon: "✨", label: "儀容" },
+            chores: { type: 'base', bg: "bg-blue-100 text-blue-800", icon: "🧹", label: "雜務" },
+            knowledge: { type: 'job', bg: "bg-purple-100 text-purple-800", icon: "📚", label: "知識" },
+            finance: { type: 'job', bg: "bg-emerald-100 text-emerald-800", icon: "📈", label: "理財" },
+            general: { type: 'base', bg: "bg-gray-100 text-gray-800", icon: "⭐", label: "一般" },
+        };
+
         const MAIN_QUEST_PE = {
             id: 9001,
             title: "考取環工技師執照 (PE)",
@@ -150,26 +146,10 @@
         const DEFAULT_REWARDS = [
             { id: 4001, title: "無罪惡感打電動 1小時", reqType: 'base', levelReq: 1, cost: 150, currency: 'zeny', category: 'relax', unlocked: false },
             { id: 4002, title: "喝一杯手搖飲 (加料!)", reqType: 'base', levelReq: 3, cost: 80, currency: 'zeny', category: 'food', unlocked: false },
-            { id: 4022, title: "Steam/遊戲課金 ($500內)", reqType: 'job', levelReq: 4, cost: 3000, currency: 'zeny', category: 'shopping', unlocked: false },
             { id: 999, title: "聖人模式 (釋放)", reqType: 'base', levelReq: 1, cost: 100, currency: 'stamina', category: 'special', unlocked: true }
         ];
 
-        const categories = {
-            fitness: { type: 'base', bg: "bg-red-100 text-red-800", icon: "💪", label: "健康" },
-            grooming: { type: 'base', bg: "bg-pink-100 text-pink-800", icon: "✨", label: "儀容" },
-            chores: { type: 'base', bg: "bg-blue-100 text-blue-800", icon: "🧹", label: "雜務" },
-            knowledge: { type: 'job', bg: "bg-purple-100 text-purple-800", icon: "📚", label: "知識" },
-            finance: { type: 'job', bg: "bg-emerald-100 text-emerald-800", icon: "📈", label: "理財" },
-            general: { type: 'base', bg: "bg-gray-100 text-gray-800", icon: "⭐", label: "一般" },
-        };
-        const rewardCategories = {
-            food: { label: "🍔 飲食享受", color: "text-orange-600 border-orange-200 bg-orange-50" },
-            relax: { label: "💤 休息放鬆", color: "text-teal-600 border-teal-200 bg-teal-50" },
-            shopping: { label: "🛍️ 購物犒賞", color: "text-pink-600 border-pink-200 bg-pink-50" },
-            special: { label: "✨ 特殊功能", color: "text-purple-600 border-purple-200 bg-purple-50" }
-        };
-
-        // --- Components ---
+        // --- 3. UI Components (No Icons, just Emojis/Text) ---
         const Button = ({ onClick, children, variant = "primary", className = "", disabled = false }) => {
             const variants = {
                 primary: "bg-blue-100 hover:bg-blue-200 text-blue-900 border-blue-300",
@@ -180,8 +160,7 @@
                 green: "bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border-emerald-300",
                 purple: "bg-purple-100 hover:bg-purple-200 text-purple-900 border-purple-300"
             };
-            const handleClick = (e) => { if (!disabled) sfx.click(); if (onClick) onClick(e); };
-            return <button onClick={handleClick} disabled={disabled} className={`ro-btn-base px-3 py-2 rounded text-sm font-bold flex items-center justify-center gap-2 ${variants[variant]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>{children}</button>;
+            return <button onClick={(e) => { if(!disabled) sfx.click(); if(onClick) onClick(e); }} disabled={disabled} className={`ro-btn-base px-3 py-2 rounded text-sm font-bold flex items-center justify-center gap-2 ${variants[variant]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed grayscale' : ''}`}>{children}</button>;
         };
 
         const ProgressBar = ({ current, max, label, height = "h-4", type = "hp" }) => {
@@ -205,8 +184,9 @@
             return <div className={`fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[70] flex items-center justify-between gap-3 px-4 py-2 rounded-lg border shadow-lg w-[90%] max-w-sm ${styles[type] || styles.info}`}><span className="truncate text-sm font-bold">{message}</span><button onClick={onClose} className="opacity-60 hover:opacity-100">✖</button></div>;
         };
 
-        // --- App Logic ---
+        // --- 4. Main App ---
         function LifeRPG() {
+            // Load User Data with Fallback
             const [user, setUser] = React.useState(() => {
                 try {
                     const saved = localStorage.getItem('liferpg-user-v2');
@@ -234,19 +214,17 @@
             const getISODate = (d) => { const year = d.getFullYear(); const month = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; };
             const [viewDate, setViewDate] = React.useState(new Date()); 
             const viewDateStr = getISODate(viewDate);
-            const todayStr = getISODate(new Date());
-            const isToday = viewDateStr === todayStr;
+            const isToday = viewDateStr === getISODate(new Date());
             const todayDate = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
             const showNotification = (message, type = 'info') => { setNotification({ message, type }); setTimeout(() => setNotification(null), 3000); };
 
             const [currentTimeState, setCurrentTimeState] = React.useState(new Date());
             const [workMode, setWorkMode] = React.useState(null); 
             React.useEffect(() => { const timer = setInterval(() => setCurrentTimeState(new Date()), 1000); return () => clearInterval(timer); }, []);
-            const getClockStats = () => { const now = currentTimeState; const currentHour = now.getHours(); const currentMin = now.getMinutes(); const currentTimeVal = currentHour + currentMin / 60; const isWorkingDay = workMode !== null ? workMode : !(now.getDay() === 0 || now.getDay() === 6); const BEDTIME = 23; const WORK_START = 8; const WORK_END = 17; if (currentTimeVal >= BEDTIME || currentTimeVal < 5) return { hours: 0, mins: 0, status: 'sleep' }; let rawFreeHours = BEDTIME - currentTimeVal; let status = 'free'; let finalFreeHours = rawFreeHours; if (isWorkingDay) { const overlapStart = Math.max(currentTimeVal, WORK_START); const overlapEnd = Math.min(BEDTIME, WORK_END); if (overlapStart < overlapEnd) { finalFreeHours -= (overlapEnd - overlapStart); if (currentTimeVal >= WORK_START && currentTimeVal < WORK_END) status = 'working'; } } finalFreeHours = Math.max(0, finalFreeHours); return { hours: Math.floor(finalFreeHours), mins: Math.floor((finalFreeHours - Math.floor(finalFreeHours)) * 60), status, isWorkingDay }; };
-            const clockStats = getClockStats();
             const timeString = currentTimeState.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const toggleWorkMode = () => { sfx.click(); setWorkMode(prev => { if (prev === null) return !clockStats.isWorkingDay; return !prev; }); };
-
+            const getClockStats = () => { const now = currentTimeState; const h = now.getHours(); const m = now.getMinutes(); const t = h + m / 60; const isW = workMode !== null ? workMode : !(now.getDay() === 0 || now.getDay() === 6); if (t >= 23 || t < 5) return { h: 0, m: 0, s: 'sleep', isW }; let f = 23 - t; if (isW) { const s = Math.max(t, 8); const e = Math.min(23, 17); if (s < e) { f -= (e - s); if (t >= 8 && t < 17) return { h: Math.floor(f), m: Math.floor((f % 1) * 60), s: 'working', isW }; } } f = Math.max(0, f); return { h: Math.floor(f), m: Math.floor((f % 1) * 60), s: 'free', isW }; };
+            const clockStats = getClockStats();
+            
             const calculateMaxXP = (level) => { let xp = 100; for (let i = 1; i < level; i++) xp = Math.floor(xp * 1.2); return xp; };
 
             React.useEffect(() => { localStorage.setItem('liferpg-user-v2', JSON.stringify(user)); window.soundEnabled = user.sound; }, [user]);
@@ -256,7 +234,6 @@
             React.useEffect(() => { localStorage.setItem('liferpg-daily-completions', JSON.stringify(dailyCompletions)); }, [dailyCompletions]);
             React.useEffect(() => { localStorage.setItem('liferpg-app-state', JSON.stringify(appState)); }, [appState]);
 
-            // Status Update
             const updateUserStatus = (xp, catKey, money, sta=0) => {
                 const cat = categories[catKey] || categories.general;
                 const type = cat.type;
@@ -270,7 +247,6 @@
                 });
             };
 
-            // Quest / Project Logic
             const handleProjectAction = (task, actionType, payload) => {
                 const phaseIdx = task.chainIndex || 0;
                 const phase = task.phases[phaseIdx];
@@ -322,7 +298,6 @@
                 }
             };
 
-            // Task Actions
             const handleToggleTask = (taskId) => {
                 const task = tasks.find(t => t.id === taskId);
                 if (task.repeat === 'project') return; 
@@ -440,6 +415,7 @@
                     );
                 }
 
+                // REGULAR RENDERER
                 let displayTitle = task.title;
                 let stepInfo = "";
                 if (task.chain) {
@@ -508,7 +484,7 @@
                         <div className="ro-window p-3 space-y-2 max-w-lg mx-auto">
                             <div className="flex items-center justify-between bg-slate-700/50 rounded p-1.5 border border-slate-600 mb-1">
                                 <div className="flex items-center gap-2"><span className="text-lg">🕒</span><span className="font-pixel text-lg text-white tracking-widest">{timeString}</span></div>
-                                <div className="flex items-center gap-3"><button onClick={toggleWorkMode} className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors border ${clockStats.isWorkingDay ? 'bg-blue-900/80 text-blue-200 border-blue-700' : 'bg-green-900/80 text-green-200 border-green-700'}`}>{clockStats.isWorkingDay ? "💼" : "☕"} {clockStats.isWorkingDay ? "上班日" : "休假日"}</button><div className="flex items-center gap-1 text-xs font-bold text-slate-300"><span className={clockStats.status === 'sleep' ? 'text-slate-500' : 'text-yellow-200'}>🌙</span>{clockStats.status === 'sleep' ? <span className="text-slate-500">休息中</span> : <span className={clockStats.hours < 2 ? 'text-red-400' : 'text-white'}>{clockStats.hours}h {clockStats.mins}m <span className="text-[9px] text-slate-400 ml-1 font-normal">自由</span></span>}</div></div>
+                                <div className="flex items-center gap-3"><button onClick={toggleWorkMode} className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors border ${clockStats.isW ? 'bg-blue-900/80 text-blue-200 border-blue-700' : 'bg-green-900/80 text-green-200 border-green-700'}`}>{clockStats.isW ? "💼 上班" : "☕ 休假"}</button><div className="flex items-center gap-1 text-xs font-bold text-slate-300"><span className={clockStats.s === 'sleep' ? 'text-slate-500' : 'text-yellow-200'}>🌙</span>{clockStats.s === 'sleep' ? <span className="text-slate-500">休息中</span> : <span className={clockStats.h < 2 ? 'text-red-400' : 'text-white'}>{clockStats.h}h {clockStats.m}m <span className="text-[9px] text-slate-400 ml-1 font-normal">自由</span></span>}</div></div>
                             </div>
                             <div className="flex items-start justify-between border-b border-slate-300 pb-1 mb-1"><h1 className="text-base font-bold text-blue-900 flex items-center gap-2">Player Status</h1><div className="flex items-center gap-2"><div className="bg-white/80 border border-slate-400 rounded px-2 py-0.5 text-xs font-pixel flex items-center gap-1"><span className="text-yellow-600 font-bold">Z</span><span>{user.zeny}</span></div><button onClick={() => setShowSettings(true)} className="text-slate-500">⚙️</button></div></div>
                             <div className="flex justify-between items-end px-1"><div>{isEditingName ? (<input autoFocus className="text-sm font-bold text-slate-800 w-32 px-1 py-0.5" value={tempName} onChange={e => setTempName(e.target.value)} onBlur={() => {setIsEditingName(false); setUser({...user, name: tempName}); sfx.confirm();}} />) : (<div className="text-sm font-bold text-slate-800 flex items-center gap-2 cursor-pointer hover:bg-slate-200 rounded px-1 transition-colors" onClick={() => setIsEditingName(true)}>{user.name} ✏️</div>)}<div className="text-xs font-bold text-blue-700 flex items-center gap-1">👑 {user.jobTitle}</div></div></div>
@@ -526,17 +502,23 @@
 
                         {activeTab === 'tasks' && (
                             <div className="space-y-6 pb-12 animate-slide-in">
+                                
+                                {/* MAIN QUEST SECTION */}
                                 {mainQuests.length > 0 && (
                                     <div className="mb-6">
                                         <h3 className="text-[12px] font-bold text-purple-600 uppercase tracking-widest mb-2 border-b border-purple-200 pb-1 flex items-center gap-1">📜 主線任務 (Main Quest)</h3>
                                         <div className="space-y-4">{mainQuests.map(t => renderTaskItem(t))}</div>
                                     </div>
                                 )}
+
+                                {/* FILTER & NAV */}
                                 <div className="grid grid-cols-3 gap-2 mb-2 w-full">
                                     <button onClick={() => {sfx.click(); setQuestFilter('all');}} className={`py-1.5 rounded-full text-[10px] font-bold border text-center w-full ${questFilter === 'all' ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-slate-500 border-slate-300'}`}>全部</button>
                                     <button onClick={() => {sfx.click(); setQuestFilter('base');}} className={`py-1.5 rounded-full text-[10px] font-bold border text-center w-full ${questFilter === 'base' ? 'bg-red-500 text-white border-red-600' : 'bg-white text-slate-500 border-slate-300'}`}>生活</button>
                                     <button onClick={() => {sfx.click(); setQuestFilter('job');}} className={`py-1.5 rounded-full text-[10px] font-bold border text-center w-full ${questFilter === 'job' ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-300'}`}>職涯</button>
                                 </div>
+
+                                {/* TASK LISTS */}
                                 {favorites.length === 0 && others.length === 0 && mainQuests.length === 0 && completedList.length === 0 && <div className="text-center py-8 text-slate-400 text-xs">無任務</div>}
                                 {renderTaskSection(favorites, "🌟 關注任務", "text-yellow-500 border-yellow-700")}
                                 {Object.entries(categories).map(([key, cat]) => {
