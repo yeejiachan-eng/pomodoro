@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>LifeRPG - v6.3 (Ultra Safe Mode)</title>
+    <title>LifeRPG - v6.4 (Final Fix)</title>
     
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -12,7 +12,8 @@
 
     <script>
         window.onerror = function(message, source, lineno, colno, error) {
-            alert("⚠️ 發生錯誤：\n" + message + "\n行數：" + lineno);
+            console.error(error);
+            // alert("系統偵測到錯誤：\n" + message); // Uncomment if needed
         };
     </script>
 
@@ -85,7 +86,7 @@
             }
         };
 
-        // --- 2. Data & Categories (Icons replaced with Emojis) ---
+        // --- 2. Data Definitions ---
         const categories = {
             fitness: { type: 'base', bg: "bg-red-100 text-red-800", icon: "💪", label: "健康" },
             grooming: { type: 'base', bg: "bg-pink-100 text-pink-800", icon: "✨", label: "儀容" },
@@ -146,10 +147,11 @@
         const DEFAULT_REWARDS = [
             { id: 4001, title: "無罪惡感打電動 1小時", reqType: 'base', levelReq: 1, cost: 150, currency: 'zeny', category: 'relax', unlocked: false },
             { id: 4002, title: "喝一杯手搖飲 (加料!)", reqType: 'base', levelReq: 3, cost: 80, currency: 'zeny', category: 'food', unlocked: false },
+            { id: 4022, title: "Steam/遊戲課金 ($500內)", reqType: 'job', levelReq: 4, cost: 3000, currency: 'zeny', category: 'shopping', unlocked: false },
             { id: 999, title: "聖人模式 (釋放)", reqType: 'base', levelReq: 1, cost: 100, currency: 'stamina', category: 'special', unlocked: true }
         ];
 
-        // --- 3. UI Components (No Icons, just Emojis/Text) ---
+        // --- 3. UI Components ---
         const Button = ({ onClick, children, variant = "primary", className = "", disabled = false }) => {
             const variants = {
                 primary: "bg-blue-100 hover:bg-blue-200 text-blue-900 border-blue-300",
@@ -186,12 +188,9 @@
 
         // --- 4. Main App ---
         function LifeRPG() {
-            // Load User Data with Fallback
+            // -- States --
             const [user, setUser] = React.useState(() => {
-                try {
-                    const saved = localStorage.getItem('liferpg-user-v2');
-                    return saved ? JSON.parse(saved) : { name: "Player", jobTitle: "工程師", zeny: 0, base: { level: 1, xp: 0, maxXp: 100 }, job: { level: 1, xp: 0, maxXp: 100 }, stamina: { current: 100, max: 100 }, sound: true };
-                } catch(e) { return { name: "Player", jobTitle: "工程師", zeny: 0, base: { level: 1, xp: 0, maxXp: 100 }, job: { level: 1, xp: 0, maxXp: 100 }, stamina: { current: 100, max: 100 }, sound: true }; }
+                try { const saved = localStorage.getItem('liferpg-user-v2'); return saved ? JSON.parse(saved) : { name: "Player", jobTitle: "工程師", zeny: 0, base: { level: 1, xp: 0, maxXp: 100 }, job: { level: 1, xp: 0, maxXp: 100 }, stamina: { current: 100, max: 100 }, sound: true }; } catch(e) { return { name: "Player", jobTitle: "工程師", zeny: 0, base: { level: 1, xp: 0, maxXp: 100 }, job: { level: 1, xp: 0, maxXp: 100 }, stamina: { current: 100, max: 100 }, sound: true }; }
             });
             const [tasks, setTasks] = React.useState(() => { try { const saved = localStorage.getItem('liferpg-tasks'); return saved ? JSON.parse(saved) : DEFAULT_TASKS; } catch(e){ return DEFAULT_TASKS; }});
             const [dailyCompletions, setDailyCompletions] = React.useState(() => { try { const saved = localStorage.getItem('liferpg-daily-completions'); return saved ? JSON.parse(saved) : {}; } catch(e){ return {}; }});
@@ -211,22 +210,68 @@
             const [newReward, setNewReward] = React.useState({ title: '', reqType: 'base', levelReq: 2, cost: 100, category: 'food' });
             const [newJobTitle, setNewJobTitle] = React.useState(""); 
 
-            const getISODate = (d) => { const year = d.getFullYear(); const month = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; };
-            const [viewDate, setViewDate] = React.useState(new Date()); 
-            const viewDateStr = getISODate(viewDate);
-            const isToday = viewDateStr === getISODate(new Date());
-            const todayDate = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-            const showNotification = (message, type = 'info') => { setNotification({ message, type }); setTimeout(() => setNotification(null), 3000); };
-
             const [currentTimeState, setCurrentTimeState] = React.useState(new Date());
             const [workMode, setWorkMode] = React.useState(null); 
-            React.useEffect(() => { const timer = setInterval(() => setCurrentTimeState(new Date()), 1000); return () => clearInterval(timer); }, []);
+
+            // -- Computed --
+            const getISODate = (d) => { const year = d.getFullYear(); const month = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; };
+            const viewDate = new Date(); // Simplified for now, or use state if needed
+            const viewDateStr = getISODate(viewDate);
+            const todayStr = getISODate(new Date());
+            const todayDate = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
             const timeString = currentTimeState.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const getClockStats = () => { const now = currentTimeState; const h = now.getHours(); const m = now.getMinutes(); const t = h + m / 60; const isW = workMode !== null ? workMode : !(now.getDay() === 0 || now.getDay() === 6); if (t >= 23 || t < 5) return { h: 0, m: 0, s: 'sleep', isW }; let f = 23 - t; if (isW) { const s = Math.max(t, 8); const e = Math.min(23, 17); if (s < e) { f -= (e - s); if (t >= 8 && t < 17) return { h: Math.floor(f), m: Math.floor((f % 1) * 60), s: 'working', isW }; } } f = Math.max(0, f); return { h: Math.floor(f), m: Math.floor((f % 1) * 60), s: 'free', isW }; };
+
+            // -- Clock Logic --
+            const getClockStats = () => {
+                const now = currentTimeState;
+                const h = now.getHours();
+                const m = now.getMinutes();
+                const t = h + m / 60;
+                const isWorkingDay = workMode !== null ? workMode : !(now.getDay() === 0 || now.getDay() === 6);
+                const BEDTIME = 23; 
+                const WORK_START = 8; 
+                const WORK_END = 17; 
+                
+                if (t >= BEDTIME || t < 5) return { h: 0, m: 0, s: 'sleep', isWorkingDay };
+                
+                let f = BEDTIME - t;
+                let status = 'free';
+                
+                if (isWorkingDay) {
+                    const s = Math.max(t, WORK_START);
+                    const e = Math.min(BEDTIME, WORK_END);
+                    if (s < e) {
+                        f -= (e - s);
+                        if (t >= WORK_START && t < WORK_END) status = 'working';
+                    }
+                }
+                
+                f = Math.max(0, f);
+                return { 
+                    h: Math.floor(f), 
+                    m: Math.floor((f % 1) * 60), 
+                    s: status, 
+                    isWorkingDay: isWorkingDay 
+                };
+            };
             const clockStats = getClockStats();
-            
+
+            // -- Actions --
+            // FIXED: toggleWorkMode is now defined here, and clockStats is defined above.
+            const toggleWorkMode = () => {
+                sfx.click();
+                setWorkMode(prev => {
+                    // If prev is null, use current calculated state, else flip it
+                    if (prev === null) return !clockStats.isWorkingDay;
+                    return !prev;
+                });
+            };
+
+            const showNotification = (message, type = 'info') => { setNotification({ message, type }); setTimeout(() => setNotification(null), 3000); };
             const calculateMaxXP = (level) => { let xp = 100; for (let i = 1; i < level; i++) xp = Math.floor(xp * 1.2); return xp; };
 
+            // -- Effects --
+            React.useEffect(() => { const timer = setInterval(() => setCurrentTimeState(new Date()), 1000); return () => clearInterval(timer); }, []);
             React.useEffect(() => { localStorage.setItem('liferpg-user-v2', JSON.stringify(user)); window.soundEnabled = user.sound; }, [user]);
             React.useEffect(() => { localStorage.setItem('liferpg-tasks', JSON.stringify(tasks)); }, [tasks]);
             React.useEffect(() => { localStorage.setItem('liferpg-rewards-v2', JSON.stringify(rewards)); }, [rewards]);
@@ -334,12 +379,10 @@
             const handleReset = () => { if(confirm("確定要重置每日任務嗎？")) { sfx.confirm(); setTasks(DEFAULT_TASKS); setRewards(DEFAULT_REWARDS); setDailyCompletions({}); } };
             const handleHardReset = () => { if(confirm("⚠️ 警告：這將清除所有存檔！確定嗎？")) { localStorage.clear(); window.location.reload(); } };
 
-            // Render Task
             const renderTaskItem = (task) => {
                 const cat = categories[task.category] || categories.general;
                 const isCompleted = (dailyCompletions[viewDateStr] || []).includes(task.id);
                 
-                // PROJECT RENDERER
                 if (task.repeat === 'project' && task.phases) {
                     const idx = task.chainIndex || 0;
                     const phase = task.phases[Math.min(idx, task.phases.length-1)];
@@ -415,7 +458,6 @@
                     );
                 }
 
-                // REGULAR RENDERER
                 let displayTitle = task.title;
                 let stepInfo = "";
                 if (task.chain) {
@@ -462,7 +504,6 @@
                 let baseList = normalTasks.filter(task => { 
                     const cat = categories[task.category] || categories.general; 
                     if (questFilter !== 'all' && cat.type !== questFilter) return false; 
-                    const viewDay = viewDate.getDay(); const isWeekendView = viewDay === 0 || viewDay === 6; if (task.repeat === 'weekend' && !isWeekendView) return false; 
                     return true; 
                 }); 
                 const completedIds = dailyCompletions[viewDateStr] || []; 
@@ -484,7 +525,20 @@
                         <div className="ro-window p-3 space-y-2 max-w-lg mx-auto">
                             <div className="flex items-center justify-between bg-slate-700/50 rounded p-1.5 border border-slate-600 mb-1">
                                 <div className="flex items-center gap-2"><span className="text-lg">🕒</span><span className="font-pixel text-lg text-white tracking-widest">{timeString}</span></div>
-                                <div className="flex items-center gap-3"><button onClick={toggleWorkMode} className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors border ${clockStats.isW ? 'bg-blue-900/80 text-blue-200 border-blue-700' : 'bg-green-900/80 text-green-200 border-green-700'}`}>{clockStats.isW ? "💼 上班" : "☕ 休假"}</button><div className="flex items-center gap-1 text-xs font-bold text-slate-300"><span className={clockStats.s === 'sleep' ? 'text-slate-500' : 'text-yellow-200'}>🌙</span>{clockStats.s === 'sleep' ? <span className="text-slate-500">休息中</span> : <span className={clockStats.h < 2 ? 'text-red-400' : 'text-white'}>{clockStats.h}h {clockStats.m}m <span className="text-[9px] text-slate-400 ml-1 font-normal">自由</span></span>}</div></div>
+                                <div className="flex items-center gap-3">
+                                    <button onClick={toggleWorkMode} className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition-colors border ${clockStats.isWorkingDay ? 'bg-blue-900/80 text-blue-200 border-blue-700' : 'bg-green-900/80 text-green-200 border-green-700'}`}>
+                                        {clockStats.isWorkingDay ? "💼 上班" : "☕ 休假"}
+                                    </button>
+                                    <div className="flex items-center gap-1 text-xs font-bold text-slate-300">
+                                        <span className={clockStats.s === 'sleep' ? 'text-slate-500' : 'text-yellow-200'}>🌙</span>
+                                        {clockStats.s === 'sleep' ? 
+                                            <span className="text-slate-500">休息中</span> : 
+                                            <span className={clockStats.h < 2 ? 'text-red-400' : 'text-white'}>
+                                                {clockStats.h}h {clockStats.m}m <span className="text-[9px] text-slate-400 ml-1 font-normal">自由</span>
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
                             </div>
                             <div className="flex items-start justify-between border-b border-slate-300 pb-1 mb-1"><h1 className="text-base font-bold text-blue-900 flex items-center gap-2">Player Status</h1><div className="flex items-center gap-2"><div className="bg-white/80 border border-slate-400 rounded px-2 py-0.5 text-xs font-pixel flex items-center gap-1"><span className="text-yellow-600 font-bold">Z</span><span>{user.zeny}</span></div><button onClick={() => setShowSettings(true)} className="text-slate-500">⚙️</button></div></div>
                             <div className="flex justify-between items-end px-1"><div>{isEditingName ? (<input autoFocus className="text-sm font-bold text-slate-800 w-32 px-1 py-0.5" value={tempName} onChange={e => setTempName(e.target.value)} onBlur={() => {setIsEditingName(false); setUser({...user, name: tempName}); sfx.confirm();}} />) : (<div className="text-sm font-bold text-slate-800 flex items-center gap-2 cursor-pointer hover:bg-slate-200 rounded px-1 transition-colors" onClick={() => setIsEditingName(true)}>{user.name} ✏️</div>)}<div className="text-xs font-bold text-blue-700 flex items-center gap-1">👑 {user.jobTitle}</div></div></div>
@@ -502,23 +556,17 @@
 
                         {activeTab === 'tasks' && (
                             <div className="space-y-6 pb-12 animate-slide-in">
-                                
-                                {/* MAIN QUEST SECTION */}
                                 {mainQuests.length > 0 && (
                                     <div className="mb-6">
                                         <h3 className="text-[12px] font-bold text-purple-600 uppercase tracking-widest mb-2 border-b border-purple-200 pb-1 flex items-center gap-1">📜 主線任務 (Main Quest)</h3>
                                         <div className="space-y-4">{mainQuests.map(t => renderTaskItem(t))}</div>
                                     </div>
                                 )}
-
-                                {/* FILTER & NAV */}
                                 <div className="grid grid-cols-3 gap-2 mb-2 w-full">
                                     <button onClick={() => {sfx.click(); setQuestFilter('all');}} className={`py-1.5 rounded-full text-[10px] font-bold border text-center w-full ${questFilter === 'all' ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-slate-500 border-slate-300'}`}>全部</button>
                                     <button onClick={() => {sfx.click(); setQuestFilter('base');}} className={`py-1.5 rounded-full text-[10px] font-bold border text-center w-full ${questFilter === 'base' ? 'bg-red-500 text-white border-red-600' : 'bg-white text-slate-500 border-slate-300'}`}>生活</button>
                                     <button onClick={() => {sfx.click(); setQuestFilter('job');}} className={`py-1.5 rounded-full text-[10px] font-bold border text-center w-full ${questFilter === 'job' ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-300'}`}>職涯</button>
                                 </div>
-
-                                {/* TASK LISTS */}
                                 {favorites.length === 0 && others.length === 0 && mainQuests.length === 0 && completedList.length === 0 && <div className="text-center py-8 text-slate-400 text-xs">無任務</div>}
                                 {renderTaskSection(favorites, "🌟 關注任務", "text-yellow-500 border-yellow-700")}
                                 {Object.entries(categories).map(([key, cat]) => {
