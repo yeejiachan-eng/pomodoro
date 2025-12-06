@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>LifeRPG - v8.3 (Final Structure Fix)</title>
+    <title>LifeRPG - v8.4 (Icons Fixed)</title>
     
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("⚠️ 錯誤：" + message + "\n行數：" + lineno);
+        };
+    </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=VT323&display=swap" rel="stylesheet">
 
@@ -35,7 +41,7 @@
         .calendar-day.has-data { position: relative; }
         .calendar-day.has-data::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background-color: #48bb78; }
         
-        #emergency-reset { position: fixed; bottom: 10px; left: 10px; z-index: 99999; background: #e53e3e; color: white; border: 2px solid white; padding: 5px 10px; border-radius: 5px; font-size: 10px; font-weight: bold; opacity: 0.5; cursor: pointer; }
+        #emergency-reset { position: fixed; bottom: 10px; left: 10px; z-index: 99999; background: #e53e3e; color: white; border: 2px solid white; padding: 5px 10px; border-radius: 5px; font-size: 10px; font-weight: bold; opacity: 0.8; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -125,13 +131,7 @@
         };
 
         const DEFAULT_TASKS = [
-            MAIN_QUEST_PE, 
-            { id: 1001, title: "遛狗", category: "fitness", xp: 30, money: 50, repeat: 'daily' }, 
-            { id: 1002, title: "健身/運動", category: "fitness", xp: 50, money: 100, stamina: 34, repeat: 'daily' }, 
-            { id: 3014, title: "丟垃圾", category: "chores", xp: 10, money: 20, repeat: 'daily' },
-            { id: 4001, title: "修鬍子", category: "grooming", xp: 10, money: 20, repeat: 'daily' },
-            { id: 4002, title: "剪鼻毛", category: "grooming", xp: 20, money: 40, repeat: 'weekly' },
-            { id: 4003, title: "剪頭髮 (每3週)", category: "grooming", xp: 50, money: 100, repeat: 'custom', frequency: 21 },
+            MAIN_QUEST_PE // Only Main Quest
         ];
 
         const DEFAULT_REWARDS = [
@@ -235,7 +235,6 @@
                 clockMins = Math.floor((f % 1) * 60);
             }
 
-            // ** THE CRITICAL FIX: Defined BEFORE usage **
             const toggleWorkMode = () => {
                 sfx.click();
                 setWorkMode(prev => {
@@ -366,7 +365,7 @@
             const handleAddReward = (e) => { e.preventDefault(); if (!newReward.title.trim()) return; setRewards([...rewards, { id: Date.now(), title: newReward.title, reqType: newReward.reqType, levelReq: parseInt(newReward.levelReq), cost: parseInt(newReward.cost || 0), currency: newReward.currency || 'zeny', category: newReward.category || 'shopping', unlocked: false }]); setNewReward(prev => ({ ...prev, title: '', cost: 100, currency: 'zeny' })); sfx.confirm(); showNotification("新增獎勵", "success"); };
             const handleDeleteReward = (id) => { setRewards(rewards.filter(r => r.id !== id)); };
             const handleClearHistory = () => { if(window.confirm("清除紀錄？")) { setHistory([]); setDailyCompletions({}); showNotification("已清除", "info"); setShowSettings(false); } };
-            const handleExportData = () => { sfx.confirm(); const data = { user, tasks, rewards, history, appState, dailyCompletions, version: "8.3" }; const blob = new Blob([JSON.stringify(data)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `liferpg_backup.json`; document.body.appendChild(link); link.click(); document.body.removeChild(link); showNotification("備份已下載", "success"); };
+            const handleExportData = () => { sfx.confirm(); const data = { user, tasks, rewards, history, appState, dailyCompletions, version: "8.4" }; const blob = new Blob([JSON.stringify(data)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `liferpg_backup.json`; document.body.appendChild(link); link.click(); document.body.removeChild(link); showNotification("備份已下載", "success"); };
             const handleImportData = (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const data = JSON.parse(e.target.result); if(data.user) setUser({...data.user, name: data.user.name || "Player", jobTitle: data.user.jobTitle || "工程師", zeny: data.user.zeny || 0, stamina: data.user.stamina || {current:100, max:100}, sound: data.user.sound !== undefined ? data.user.sound : true}); if(data.tasks) setTasks(data.tasks); if(data.rewards) setRewards(data.rewards); if(data.history) setHistory(data.history); if(data.dailyCompletions) setDailyCompletions(data.dailyCompletions); if(data.appState) setAppState(data.appState); sfx.success(); showNotification("還原成功", "success"); setShowSettings(false); } catch (err) { showNotification("格式錯誤", "error"); } }; reader.readAsText(file); };
             
             // -- Sub Components --
@@ -546,6 +545,29 @@
                                     <button onClick={() => {sfx.click(); setQuestFilter('base');}} className={`py-1.5 rounded-full text-[10px] font-bold border text-center w-full ${questFilter === 'base' ? 'bg-red-500 text-white border-red-600' : 'bg-white text-slate-500 border-slate-300'}`}>生活</button>
                                     <button onClick={() => {sfx.click(); setQuestFilter('job');}} className={`py-1.5 rounded-full text-[10px] font-bold border text-center w-full ${questFilter === 'job' ? 'bg-blue-500 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-300'}`}>職涯</button>
                                 </div>
+                                
+                                {/* New Task Input */}
+                                <Card title="Quest Board">
+                                    <div className="flex flex-col gap-2">
+                                        <input type="text" placeholder="新任務..." className="w-full px-2 py-1.5 min-w-0" value={newTask.title} onChange={(e) => setNewTask({...newTask, title: e.target.value})} />
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <select className="px-1 py-1.5 text-xs min-w-0" value={newTask.category} onChange={(e) => setNewTask({...newTask, category: e.target.value})}>{Object.entries(categories).map(([key, val]) => <option key={key} value={key}>{val.label}</option>)}</select>
+                                            <select className="px-1 py-1.5 text-xs min-w-0" value={newTask.repeat} onChange={(e) => setNewTask({...newTask, repeat: e.target.value})}><option value="daily">每日</option><option value="weekly">每週</option><option value="weekend">週末</option><option value="custom">自定義</option><option value="none">一次</option></select>
+                                        </div>
+                                        {newTask.repeat === 'custom' && (
+                                            <div className="flex items-center gap-2 bg-slate-700 p-1.5 rounded border border-slate-600">
+                                                <span className="text-[10px] text-slate-300 whitespace-nowrap">每</span>
+                                                <input type="number" min="1" className="w-12 px-1 py-0.5 text-center text-xs bg-slate-800 text-white rounded border border-slate-500" value={newTask.frequency || ''} onChange={(e) => setNewTask({...newTask, frequency: e.target.value})} placeholder="天數" />
+                                                <span className="text-[10px] text-slate-300 whitespace-nowrap">天重置</span>
+                                            </div>
+                                        )}
+                                        <div className="flex gap-2">
+                                             <select className="flex-1 px-1 py-1.5 text-xs min-w-0" value={newTask.xp} onChange={(e) => setNewTask({...newTask, xp: e.target.value})}><option value="10">10 XP ($20Z)</option><option value="20">20 XP ($40Z)</option><option value="30">30 XP ($60Z)</option><option value="50">50 XP ($100Z)</option></select>
+                                            <Button variant="primary" onClick={handleAddTask} className="flex-1 text-xs">＋ 接受</Button>
+                                        </div>
+                                    </div>
+                                </Card>
+
                                 {favorites.length === 0 && others.length === 0 && mainQuests.length === 0 && completedList.length === 0 && <div className="text-center py-8 text-slate-400 text-xs">無任務</div>}
                                 {renderTaskSection(favorites, "🌟 關注任務", "text-yellow-500 border-yellow-700")}
                                 {Object.entries(categories).map(([key, cat]) => {
@@ -574,7 +596,6 @@
 
                     <Modal isOpen={showSettings} onClose={() => setShowSettings(false)} title="System">
                         <div className="space-y-4">
-                            <Button onClick={handleImportEngineerPack} variant="purple" className="w-full justify-start">📜 匯入主線任務包 (環工PE)</Button>
                             <Button onClick={handleReset} variant="secondary" className="w-full">🔄 重置每日任務</Button>
                             <div className="pt-4 border-t border-slate-300 mt-2"><h4 className="text-xs font-bold text-red-600 mb-2 uppercase tracking-wider">Danger Zone</h4><Button onClick={handleHardReset} variant="danger" className="w-full justify-start">⚠️ 強制清除所有資料</Button></div>
                         </div>
